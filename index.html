@@ -14,12 +14,13 @@ OOGL(function () {
 	var canvas = document.getElementById('canvas');
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	var context = new OOGL.Context(canvas, {
+	var oogl = new OOGL.Context(canvas, {
 		alpha: false
 	});
-	context.clearColor(0, 0, 0, 1);
-	context.clear(context.COLOR_BUFFER_BIT);
-	context.flush();
+	oogl.clearColor(0, 0, 0, 1);
+	oogl.clear(oogl.COLOR_BUFFER_BIT);
+	oogl.flush();
+	OOGL.Ajax.get('media/gundam.dae', console.dir.bind(console), 'xml');
 });
 	</script>
 </body>
