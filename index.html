@@ -3,13 +3,50 @@
 <head>
 	<title>Sonic The Hedgehog</title>
 	<link rel="stylesheet" type="text/css" href="css/style.css"/>
-	<script type="text/javascript" src="js/oogl-1.0.0.min.js"></script>
+	<script type="text/javascript" src="js/oogl-1.0.0.js"></script>
+	<script type="text/javascript" src="js/QueryableDocument.js"></script>
 </head>
 <body>
 	<canvas id="canvas">
 		<p>No browser support, sorry.</p>
 	</canvas>
 	<script type="text/javascript">
+function Mesh(oogl, arrays, indexArray) {
+	this.draw = function () {
+		arrays.bindAndPointer();
+		indexArray.bind();
+		indexArray.drawTriangles();
+	};
+}
+
+function loadMesh(document, node, oogl) {
+	function Source(node) {
+		var floatArrays = {};
+		document.queryNodes(node, 'child::float_array').map(function (node) {
+			floatArrays[node.getAttribute('id')] = node.textContent.split(/\s/).map(parseFloat);
+		});
+		// TODO
+	}
+
+	var sources = {};
+	document.queryNodes(node, 'child::source').forEach(function (node) {
+		sources[node.getAttribute('id')] = new Source(node);
+	});
+
+	var positions = [];
+	var normals = [];
+	var textureCoordinates = [];
+	var indices = [];
+
+	// TODO
+
+	var arrays = new oogl.AttributeArrays(positions.length / 3);
+	arrays.add3f(positions);
+	arrays.add3f(normals);
+	arrays.add2f(textureCoordinates);
+	return new Mesh(oogl, arrays, indexArray);
+}
+
 OOGL(function () {
 	var canvas = document.getElementById('canvas');
 	canvas.width = window.innerWidth;
@@ -20,7 +57,19 @@ OOGL(function () {
 	oogl.clearColor(0, 0, 0, 1);
 	oogl.clear(oogl.COLOR_BUFFER_BIT);
 	oogl.flush();
-	OOGL.Ajax.get('media/gundam.dae', console.dir.bind(console), 'xml');
+	OOGL.Ajax.get('media/dae/gundam.dae', function (response) {
+		var document = new QueryableDocument(response);
+		var meshes = document.queryNodes('/library_geometries/geometry/mesh').map(function (node) {
+			return loadMesh(document, node, oogl);
+		});
+		var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_TexCoord'], function () {
+			program.use();
+			meshes.forEach(function (mesh) {
+				mesh.draw();
+			});
+			oogl.flush();
+		});
+	}, 'document');
 });
 	</script>
 </body>
