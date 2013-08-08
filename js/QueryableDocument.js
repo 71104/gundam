@@ -22,7 +22,7 @@ function QueryableDocument(document) {
 	this.queryNodes = function (node, xpath) {
 		var iterator = query(node, xpath, XPathResult.UNORDERED_NODE_ITERATOR_TYPE);
 		var nodes = [];
-		for (var node = iterator.iterateNext(); node; iterator.iterateNext()) {
+		for (var node = iterator.iterateNext(); node; node = iterator.iterateNext()) {
 			nodes.push(node);
 		}
 		return nodes;
@@ -34,7 +34,7 @@ function QueryableDocument(document) {
 			xpath = null;
 		}
 		var iterator = query(node, xpath, XPathResult.UNORDERED_NODE_ITERATOR_TYPE);
-		for (var node = iterator.iterateNext(); node; iterator.iterateNext()) {
+		for (var node = iterator.iterateNext(); node; node = iterator.iterateNext()) {
 			if (callback(node) === false) {
 				return true;
 			}

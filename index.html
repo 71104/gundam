@@ -20,31 +20,72 @@ function Mesh(oogl, arrays, indexArray) {
 }
 
 function loadMesh(document, node, oogl) {
-	function Source(node) {
-		var floatArrays = {};
-		document.queryNodes(node, 'child::float_array').map(function (node) {
-			floatArrays[node.getAttribute('id')] = node.textContent.split(/\s/).map(parseFloat);
-		});
-		// TODO
+	function loadFloatArray(xpath) {
+		return document.queryString(node, xpath).replace(/^\s+/, '').replace(/\s+$/, '').split(/\s+/).map(parseFloat);
 	}
 
-	var sources = {};
-	document.queryNodes(node, 'child::source').forEach(function (node) {
-		sources[node.getAttribute('id')] = new Source(node);
-	});
+	function loadIntArray(xpath) {
+		return document.queryString(node, xpath).replace(/^\s+/, '').replace(/\s+$/, '').split(/\s+/).map(function (string) {
+			return parseInt(string, 10);
+		});
+	}
 
-	var positions = [];
-	var normals = [];
-	var textureCoordinates = [];
-	var indices = [];
+	debugger;
 
-	// TODO
+	var positions = loadFloatArray(
+'./source[\
+	concat(\"#\", @id) = ../vertices/input[\
+		@semantic = \"POSITION\"\
+	]/@source\
+]/float_array[\
+	concat(\"#\", @id) = ../technique_common/accessor[\
+		@stride = \"3\"\
+	]/@source\
+]'
+		);
+	var textureCoordinates = loadFloatArray(
+'./source[\
+	concat(\"#\", @id) = ../polylist/input[\
+		@semantic = \"TEXCOORD\"\
+	]/@source\
+]/float_array[\
+	concat(\"#\", @id) = ../technique_common/accessor[\
+		@stride = \"2\"\
+	]/@source\
+]'
+		);
+	var indices = (function () {
+		var counts = loadIntArray('./polylist/vcount');
+		var indices = loadIntArray('./polylist/p');
+		var finalIndices = [];
+		var i = 0;
+		counts.forEach(function (count) {
+			switch (count) {
+			case 3:
+				finalIndices.push(indices[i++]);
+				finalIndices.push(indices[i++]);
+				finalIndices.push(indices[i++]);
+				break;
+			case 4:
+				finalIndices.push(indices[i++]);
+				finalIndices.push(indices[i++]);
+				finalIndices.push(indices[i]);
+				finalIndices.push(indices[i++]);
+				finalIndices.push(indices[i++]);
+				finalIndices.push(indices[i - 4]);
+				break;
+			default:
+				i += count;
+				break;
+			}
+		});
+		return finalIndices;
+	})();
 
 	var arrays = new oogl.AttributeArrays(positions.length / 3);
 	arrays.add3f(positions);
-	arrays.add3f(normals);
 	arrays.add2f(textureCoordinates);
-	return new Mesh(oogl, arrays, indexArray);
+	return new Mesh(oogl, arrays, new oogl.ElementArray(indices));
 }
 
 OOGL(function () {
