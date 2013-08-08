@@ -28,6 +28,20 @@ function QueryableDocument(document) {
 		return nodes;
 	};
 
+	this.forEachNode = function (node, xpath, callback) {
+		if (!callback) {
+			callback = xpath;
+			xpath = null;
+		}
+		var iterator = query(node, xpath, XPathResult.UNORDERED_NODE_ITERATOR_TYPE);
+		for (var node = iterator.iterateNext(); node; iterator.iterateNext()) {
+			if (callback(node) === false) {
+				return true;
+			}
+		}
+		return false;
+	};
+
 	this.queryNode = function (node, xpath) {
 		return query(node, xpath, XPathResult.ANY_UNORDERED_NODE_TYPE).singleNodeValue;
 	};

@@ -59,8 +59,9 @@ OOGL(function () {
 	oogl.flush();
 	OOGL.Ajax.get('media/dae/gundam.dae', function (response) {
 		var document = new QueryableDocument(response);
-		var meshes = document.queryNodes('/library_geometries/geometry/mesh').map(function (node) {
-			return loadMesh(document, node, oogl);
+		var meshes = [];
+		document.forEachNode('/COLLADA/library_geometries/geometry/mesh', function (node) {
+			meshes.push(loadMesh(document, node, oogl));
 		});
 		var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_TexCoord'], function () {
 			program.use();
