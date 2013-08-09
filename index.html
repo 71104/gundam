@@ -30,8 +30,6 @@ function loadMesh(document, node, oogl) {
 		});
 	}
 
-	debugger;
-
 	var positions = loadFloatArray(
 './source[\
 	concat(\"#\", @id) = ../vertices/input[\
@@ -85,6 +83,7 @@ function loadMesh(document, node, oogl) {
 	var arrays = new oogl.AttributeArrays(positions.length / 3);
 	arrays.add3f(positions);
 	arrays.add2f(textureCoordinates);
+	arrays.enable();
 	return new Mesh(oogl, arrays, new oogl.ElementArray(indices));
 }
 
@@ -92,24 +91,75 @@ OOGL(function () {
 	var canvas = document.getElementById('canvas');
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+
+	canvas.addEventListener('contextmenu', function (event) {
+		event.preventDefault();
+	}, false);
+
 	var oogl = new OOGL.Context(canvas, {
 		alpha: false
 	});
-	oogl.clearColor(0, 0, 0, 1);
-	oogl.clear(oogl.COLOR_BUFFER_BIT);
-	oogl.flush();
+	oogl.enable(oogl.DEPTH_TEST);
+
 	OOGL.Ajax.get('media/dae/gundam.dae', function (response) {
 		var document = new QueryableDocument(response);
 		var meshes = [];
 		document.forEachNode('/COLLADA/library_geometries/geometry/mesh', function (node) {
 			meshes.push(loadMesh(document, node, oogl));
 		});
-		var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_TexCoord'], function () {
-			program.use();
-			meshes.forEach(function (mesh) {
-				mesh.draw();
+		var texture = new oogl.AsyncTexture('media/img/gundam.png', function () {
+			var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_TexCoord'], function () {
+				var angleX = 0;
+				var angleY = 0;
+				var offsetX = 0;
+				var offsetY = 0;
+
+				function render() {
+					oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
+					program.uniform2fv('Rotation', [angleX, angleY]);
+					program.uniform2fv('Translation', [offsetX, offsetY]);
+					meshes.forEach(function (mesh) {
+						mesh.draw();
+					});
+					oogl.flush();
+				}
+
+				program.use();
+				program.uniform1f('ScreenRatio', canvas.width / canvas.height);
+				program.uniform1f('Zoom', 0.05);
+				requestAnimationFrame(render);
+
+				var mode = null;
+				var x0, y0;
+				canvas.addEventListener('mousedown', function (event) {
+					event.preventDefault();
+					console.log(mode = ['rotate', null, 'translate'][event.button]);
+					x0 = event.clientX;
+					y0 = event.clientY;
+				}, false);
+				canvas.addEventListener('mousemove', function (event) {
+					event.preventDefault();
+					switch (mode) {
+					case 'rotate':
+						angleX += (y0 - event.clientY) * 0.01;
+						angleY += (event.clientX - x0) * 0.01;
+						break;
+					case 'translate':
+						offsetX += (event.clientX - x0) * 0.05;
+						offsetY += (y0 - event.clientY) * 0.05;
+						break;
+					default:
+						return;
+					}
+					requestAnimationFrame(render);
+					x0 = event.clientX;
+					y0 = event.clientY;
+				}, false);
+				canvas.addEventListener('mouseup', function () {
+					event.preventDefault();
+					mode = null;
+				}, false);
 			});
-			oogl.flush();
 		});
 	}, 'document');
 });

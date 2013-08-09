@@ -1,5 +1,7 @@
+uniform float ScreenRatio;
 uniform float Zoom;
 uniform vec2 Rotation;
+uniform vec2 Translation;
 
 attribute vec3 in_Vertex;
 attribute vec2 in_TexCoord;
@@ -28,10 +30,15 @@ mat4 RotateY(float a) {
 
 void main() {
 	gl_Position = mat4(
-		1, 0, 0, 0,
+		1.0 / ScreenRatio, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1.0 / Zoom
+	) * mat4(
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		Translation, 0, 1
 	) * RotateX(Rotation.x) * RotateY(Rotation.y) * vec4(in_Vertex, 1);
 	ex_TexCoord = in_TexCoord;
 }
