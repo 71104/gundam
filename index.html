@@ -11,6 +11,11 @@
 		<p>No browser support, sorry.</p>
 	</canvas>
 	<script type="text/javascript">
+window.requestAnimationFrame = window.requestAnimationFrame ||
+	window.mozRequestAnimationFrame ||
+	window.webkitRequestAnimationFrame ||
+	window.oRequestAnimationFrame;
+
 function Mesh(oogl, arrays, indexArray) {
 	this.draw = function () {
 		arrays.bindAndPointer();
