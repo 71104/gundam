@@ -16,11 +16,10 @@ window.requestAnimationFrame = window.requestAnimationFrame ||
 	window.webkitRequestAnimationFrame ||
 	window.oRequestAnimationFrame;
 
-function Mesh(oogl, arrays, indexArray) {
+function Mesh(oogl, arrays) {
 	this.draw = function () {
 		arrays.bindAndPointer();
-		indexArray.bind();
-		indexArray.drawTriangles();
+		arrays.drawTriangles();
 	};
 }
 
@@ -57,39 +56,62 @@ function loadMesh(document, node, oogl) {
 	]/@source\
 ]'
 		);
-	var indices = (function () {
+
+	var arrays = (function () {
 		var counts = loadIntArray('./polylist/vcount');
 		var indices = loadIntArray('./polylist/p');
-		var finalIndices = [];
+
+		var stride = document.queryNumber(node, 'count(./polylist/input)');
+		var positionOffset = parseInt(document.queryString(node,
+'./polylist/input[\
+	@semantic = \"VERTEX\"\
+]/@offset'
+			), 10);
+		var textureCoordinateOffset = parseInt(document.queryString(node,
+'./polylist/input[\
+	@semantic = \"TEXCOORD\"\
+]/@offset'
+			), 10);
+
+		var finalPositions = [];
+		var finalTextureCoordinates = [];
+
+		function pushVertex(i) {
+			finalPositions.push(positions[indices[i + positionOffset] * 3]);
+			finalPositions.push(positions[indices[i + positionOffset] * 3 + 1]);
+			finalPositions.push(positions[indices[i + positionOffset] * 3 + 2]);
+			finalTextureCoordinates.push(textureCoordinates[indices[i + textureCoordinateOffset] * 2]);
+			finalTextureCoordinates.push(textureCoordinates[indices[i + textureCoordinateOffset] * 2 + 1]);
+		}
+
 		var i = 0;
 		counts.forEach(function (count) {
 			switch (count) {
 			case 3:
-				finalIndices.push(indices[i++]);
-				finalIndices.push(indices[i++]);
-				finalIndices.push(indices[i++]);
+				pushVertex(i);
+				pushVertex(i + stride);
+				pushVertex(i + stride * 2);
 				break;
 			case 4:
-				finalIndices.push(indices[i++]);
-				finalIndices.push(indices[i++]);
-				finalIndices.push(indices[i]);
-				finalIndices.push(indices[i++]);
-				finalIndices.push(indices[i++]);
-				finalIndices.push(indices[i - 4]);
-				break;
-			default:
-				i += count;
+				pushVertex(i);
+				pushVertex(i + stride);
+				pushVertex(i + stride * 2);
+				pushVertex(i + stride * 2);
+				pushVertex(i + stride * 3);
+				pushVertex(i);
 				break;
 			}
+			i += stride * count;
 		});
-		return finalIndices;
+
+		var arrays = new oogl.AttributeArrays(finalPositions.length / 3);
+		arrays.add3f(finalPositions);
+		arrays.add2f(finalTextureCoordinates);
+		arrays.enable();
+		return arrays;
 	})();
 
-	var arrays = new oogl.AttributeArrays(positions.length / 3);
-	arrays.add3f(positions);
-	arrays.add2f(textureCoordinates);
-	arrays.enable();
-	return new Mesh(oogl, arrays, new oogl.ElementArray(indices));
+	return new Mesh(oogl, arrays);
 }
 
 OOGL(function () {

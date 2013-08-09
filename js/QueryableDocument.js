@@ -20,7 +20,7 @@ function QueryableDocument(document) {
 	};
 
 	this.queryNodes = function (node, xpath) {
-		var iterator = query(node, xpath, XPathResult.UNORDERED_NODE_ITERATOR_TYPE);
+		var iterator = query(node, xpath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
 		var nodes = [];
 		for (var node = iterator.iterateNext(); node; node = iterator.iterateNext()) {
 			nodes.push(node);
@@ -33,7 +33,7 @@ function QueryableDocument(document) {
 			callback = xpath;
 			xpath = null;
 		}
-		var iterator = query(node, xpath, XPathResult.UNORDERED_NODE_ITERATOR_TYPE);
+		var iterator = query(node, xpath, XPathResult.ORDERED_NODE_ITERATOR_TYPE);
 		for (var node = iterator.iterateNext(); node; node = iterator.iterateNext()) {
 			if (callback(node) === false) {
 				return true;
@@ -43,6 +43,6 @@ function QueryableDocument(document) {
 	};
 
 	this.queryNode = function (node, xpath) {
-		return query(node, xpath, XPathResult.ANY_UNORDERED_NODE_TYPE).singleNodeValue;
+		return query(node, xpath, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue;
 	};
 }
