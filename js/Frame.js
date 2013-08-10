@@ -30,6 +30,7 @@ function Frame(document, meshes) {
 	function Node(node) {
 		var id = document.queryString(node, 'substring(./instance_geometry/@url, 2)');
 		var matrix = readMatrix(node);
+		var transform = OOGL.Matrix4.IDENTITY.clone();
 		var mesh = meshes[id];
 
 		this.transform = function (filter, transformationMatrix) {
@@ -38,14 +39,21 @@ function Frame(document, meshes) {
 			}
 		};
 
+		this.setTransform = function (filter, transformationMatrix) {
+			if ((filter === id) || filter.test && filter.test(id)) {
+				transform = transformationMatrix.clone();
+			}
+		};
+
 		this.draw = function (program, baseMatrix) {
-			mesh.draw(program, baseMatrix.by(matrix));
+			mesh.draw(program, baseMatrix.by(transform).by(matrix));
 		};
 	}
 
 	function Joint(node) {
 		var id = document.queryString(node, './@id');
 		var matrix = readMatrix(node);
+		var transform = OOGL.Matrix4.IDENTITY.clone();
 
 		var nodes = document.queryNodes(node,
 './node[\
@@ -76,8 +84,21 @@ function Frame(document, meshes) {
 			}
 		};
 
+		this.setTransform = function (filter, transformationMatrix) {
+			if ((filter !== id) && (!filter.test || !filter.test(id))) {
+				nodes.forEach(function (node) {
+					node.setTransform(filter, transformationMatrix);
+				});
+				joints.forEach(function (joint) {
+					joint.setTransform(filter, transformationMatrix);
+				});
+			} else {
+				transform = transformationMatrix.clone();
+			}
+		};
+
 		this.draw = function (program, baseMatrix) {
-			var finalMatrix = baseMatrix.by(matrix);
+			var finalMatrix = baseMatrix.by(transform).by(matrix);
 			nodes.forEach(function (node) {
 				node.draw(program, finalMatrix);
 			});
@@ -96,6 +117,12 @@ function Frame(document, meshes) {
 			node.transform(filter, matrix);
 		});
 	};
+
+	this.setTransform = function (filter, matrix) {
+		roots.forEach(function (node) {
+			node.setTransform(filter, matrix);
+		});
+	}
 
 	this.draw = function (program) {
 		roots.forEach(function (node) {

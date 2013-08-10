@@ -13,11 +13,6 @@
 		<p>No browser support, sorry.</p>
 	</canvas>
 	<script type="text/javascript">
-window.requestAnimationFrame = window.requestAnimationFrame ||
-	window.mozRequestAnimationFrame ||
-	window.webkitRequestAnimationFrame ||
-	window.oRequestAnimationFrame;
-
 OOGL(function () {
 	var canvas = document.getElementById('canvas');
 	canvas.width = window.innerWidth;
@@ -47,18 +42,27 @@ OOGL(function () {
 				var offsetX = 0;
 				var offsetY = 0;
 
-				function render() {
+				program.use();
+				program.uniform1f('ScreenRatio', canvas.width / canvas.height);
+
+				function range(a, b, c, d, x) {
+					return c + (x - a) * (d - c) / (b - a);
+				}
+
+				var loop = new OOGL.RenderLoop(function () {
+					var timestamp = OOGL.Timing.now();
+					var rightAngle = range(-1, 1, 0.5, -1, Math.sin((timestamp / 200) % (Math.PI * 2)));
+					var leftAngle = range(-1, 1, -1, 0.5, Math.sin((timestamp / 200) % (Math.PI * 2)));
+					frame.setTransform(/dx_femore/, new OOGL.RotationMatrix4(1, 0, 0, rightAngle));
+					frame.setTransform(/sx_femore/, new OOGL.RotationMatrix4(1, 0, 0, leftAngle));
 					oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
 					program.uniform1f('Zoom', zoom);
 					program.uniform2fv('Rotation', [angleX, angleY]);
 					program.uniform2fv('Translation', [offsetX, offsetY]);
 					frame.draw(program);
 					oogl.flush();
-				}
-
-				program.use();
-				program.uniform1f('ScreenRatio', canvas.width / canvas.height);
-				requestAnimationFrame(render);
+				});
+				loop.start();
 
 				canvas.addEventListener('scroll', function (event) {
 					event.preventDefault();
@@ -87,7 +91,6 @@ OOGL(function () {
 					default:
 						return;
 					}
-					requestAnimationFrame(render);
 					x0 = event.clientX;
 					y0 = event.clientY;
 				}, false);
