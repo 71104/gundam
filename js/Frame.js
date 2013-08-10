@@ -1,24 +1,24 @@
 function Frame(document, meshes) {
 	function readMatrix(node) {
-		var matrix = OOGL.Matrix4.IDENTITY;
+		var matrix = OOGL.Matrix4.IDENTITY.clone();
 		document.queryNodes(node, './lookat | ./matrix | ./translate | ./rotate | ./scale | ./skew').forEach(function (node) {
 			switch (node.tagName) {
 			case 'lookat':
 				throw 'not supported';
 			case 'matrix':
-				matrix = (new OOGL.Matrix4(document.queryFloatArray(node, '.'))).transpose().multiply(matrix);
+				matrix.multiply((new OOGL.Matrix4(document.queryFloatArray(node, '.'))).transpose());
 				break;
 			case 'translate':
 				var offset = document.queryFloatArray(node, '.');
-				matrix = new OOGL.TranslationMatrix4(offset[0], offset[1], offset[2]).multiply(matrix);
+				matrix.multiply(new OOGL.TranslationMatrix4(offset[0], offset[1], offset[2]));
 				break;
 			case 'rotate':
 				var parameters = document.queryFloatArray(node, '.');
-				matrix = new OOGL.RotationMatrix4(parameters[0], parameters[1], parameters[2], parameters[3] * Math.PI / 180).multiply(matrix);
+				matrix.multiply(new OOGL.RotationMatrix4(parameters[0], parameters[1], parameters[2], parameters[3] * Math.PI / 180));
 				break;
 			case 'scale':
 				var factors = document.queryFloatArray(node, '.');
-				matrix = new OOGL.ScalingMatrix4(factors[0], factors[1], factors[2]).multiply(matrix);
+				matrix.multiply(new OOGL.ScalingMatrix4(factors[0], factors[1], factors[2]));
 				break;
 			case 'skew':
 				throw 'not supported';
@@ -30,22 +30,16 @@ function Frame(document, meshes) {
 	function Node(node) {
 		var id = document.queryString(node, 'substring(./instance_geometry/@url, 2)');
 		var matrix = readMatrix(node);
-		var move = false;
-
 		var mesh = meshes[id];
 
-		this.toggle = function (test) {
-			if (!test || (id === test) || test.test(id)) {
-				move = !move;
+		this.transform = function (filter, transformationMatrix) {
+			if ((filter === id) || filter.test && filter.test(id)) {
+				matrix = transformationMatrix.by(matrix);
 			}
 		};
 
 		this.draw = function (program, baseMatrix) {
-			if (move) {
-				mesh.draw(program, baseMatrix.by(matrix));
-			} else {
-				mesh.draw(program, OOGL.Matrix4.IDENTITY);
-			}
+			mesh.draw(program, baseMatrix.by(matrix));
 		};
 	}
 
@@ -69,21 +63,16 @@ function Frame(document, meshes) {
 				return new Joint(node);
 		});
 
-		this.toggle = function (test) {
-			if (test && (id !== test) && !test.test(id)) {
+		this.transform = function (filter, transformationMatrix) {
+			if ((filter !== id) && (!filter.test || !filter.test(id))) {
 				nodes.forEach(function (node) {
-					node.toggle(test);
+					node.transform(filter, transformationMatrix);
 				});
 				joints.forEach(function (joint) {
-					joint.toggle(test);
+					joint.transform(filter, transformationMatrix);
 				});
 			} else {
-				nodes.forEach(function (node) {
-					node.toggle();
-				});
-				joints.forEach(function (joint) {
-					joint.toggle();
-				});
+				matrix = transformationMatrix.by(matrix);
 			}
 		};
 
@@ -102,9 +91,9 @@ function Frame(document, meshes) {
 		return new Joint(node);
 	});
 
-	this.toggle = function (test) {
+	this.transform = function (filter, matrix) {
 		roots.forEach(function (node) {
-			node.toggle(test);
+			node.transform(filter, matrix);
 		});
 	};
 
