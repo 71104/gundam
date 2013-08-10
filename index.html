@@ -61,6 +61,7 @@ OOGL(function () {
 				requestAnimationFrame(render);
 
 				canvas.addEventListener('scroll', function (event) {
+					event.preventDefault();
 					// TODO
 				}, false);
 
@@ -68,7 +69,7 @@ OOGL(function () {
 				var x0, y0;
 				canvas.addEventListener('mousedown', function (event) {
 					event.preventDefault();
-					console.log(mode = ['rotate', null, 'translate'][event.button]);
+					mode = ['rotate', null, 'translate'][event.button];
 					x0 = event.clientX;
 					y0 = event.clientY;
 				}, false);

@@ -2326,15 +2326,15 @@ OOGL.RotationMatrix3 = function (x, y, z, a) {
 	var s = Math.sin(a);
 	var c = Math.cos(a);
 	return new OOGL.Matrix3([
-		c + x * x * (1 - c),
-		x * y * (1 - c) - z * s,
-		x * z * (1 - c) + y * s,
-		y * x * (1 - c) + z * s,
-		c + y * y * (1 - c),
-		y * z * (1 - c) - x * s,
-		z * x * (1 - c) - y * s,
-		z * y * (1 - c) + x * s,
-		c + z * z * (1 - c)
+		x * x * (1 - c) + c,
+		x * y * (1 - c) + z * s,
+		x * z * (1 - c) - y * s,
+		y * x * (1 - c) - z * s,
+		y * y * (1 - c) + c,
+		y * z * (1 - c) + x * s,
+		z * x * (1 - c) + y * s,
+		z * y * (1 - c) - x * s,
+		z * z * (1 - c) + c
 	]);
 };
 
@@ -2590,22 +2590,22 @@ OOGL.Matrix4.prototype = {
 		var i;
 		if (x instanceof OOGL.Matrix4) {
 			var newArray = [
-				this[0] * x[0] + this[4] * x[1] + this[8] * x[2] + this[12] + x[3],
-				this[1] * x[0] + this[5] * x[1] + this[9] * x[2] + this[13] + x[3],
-				this[2] * x[0] + this[6] * x[1] + this[10] * x[2] + this[14] + x[3],
-				this[3] * x[0] + this[7] * x[1] + this[11] * x[2] + this[15] + x[3],
-				this[0] * x[4] + this[4] * x[5] + this[8] * x[6] + this[12] + x[7],
-				this[1] * x[4] + this[5] * x[5] + this[9] * x[6] + this[13] + x[7],
-				this[2] * x[4] + this[6] * x[5] + this[10] * x[6] + this[14] + x[7],
-				this[3] * x[4] + this[7] * x[5] + this[11] * x[6] + this[15] + x[7],
-				this[0] * x[8] + this[4] * x[9] + this[8] * x[10] + this[12] + x[11],
-				this[1] * x[8] + this[5] * x[9] + this[9] * x[10] + this[13] + x[11],
-				this[2] * x[8] + this[6] * x[9] + this[10] * x[10] + this[14] + x[11],
-				this[3] * x[8] + this[7] * x[9] + this[11] * x[10] + this[15] + x[11],
-				this[0] * x[12] + this[4] * x[13] + this[8] * x[14] + this[12] + x[15],
-				this[1] * x[12] + this[5] * x[13] + this[9] * x[14] + this[13] + x[15],
-				this[2] * x[12] + this[6] * x[13] + this[10] * x[14] + this[14] + x[15],
-				this[3] * x[12] + this[7] * x[13] + this[11] * x[14] + this[15] + x[15]
+				this[0] * x[0] + this[4] * x[1] + this[8] * x[2] + this[12] * x[3],
+				this[1] * x[0] + this[5] * x[1] + this[9] * x[2] + this[13] * x[3],
+				this[2] * x[0] + this[6] * x[1] + this[10] * x[2] + this[14] * x[3],
+				this[3] * x[0] + this[7] * x[1] + this[11] * x[2] + this[15] * x[3],
+				this[0] * x[4] + this[4] * x[5] + this[8] * x[6] + this[12] * x[7],
+				this[1] * x[4] + this[5] * x[5] + this[9] * x[6] + this[13] * x[7],
+				this[2] * x[4] + this[6] * x[5] + this[10] * x[6] + this[14] * x[7],
+				this[3] * x[4] + this[7] * x[5] + this[11] * x[6] + this[15] * x[7],
+				this[0] * x[8] + this[4] * x[9] + this[8] * x[10] + this[12] * x[11],
+				this[1] * x[8] + this[5] * x[9] + this[9] * x[10] + this[13] * x[11],
+				this[2] * x[8] + this[6] * x[9] + this[10] * x[10] + this[14] * x[11],
+				this[3] * x[8] + this[7] * x[9] + this[11] * x[10] + this[15] * x[11],
+				this[0] * x[12] + this[4] * x[13] + this[8] * x[14] + this[12] * x[15],
+				this[1] * x[12] + this[5] * x[13] + this[9] * x[14] + this[13] * x[15],
+				this[2] * x[12] + this[6] * x[13] + this[10] * x[14] + this[14] * x[15],
+				this[3] * x[12] + this[7] * x[13] + this[11] * x[14] + this[15] * x[15]
 			];
 			for (i = 0; i < 16; i++) {
 				this[i] = newArray[i];
@@ -2655,22 +2655,22 @@ OOGL.Matrix4.prototype = {
 	by: function (x) {
 		if (x instanceof OOGL.Matrix4) {
 			return new OOGL.Matrix4([
-				this[0] * x[0] + this[4] * x[1] + this[8] * x[2] + this[12] + x[3],
-				this[1] * x[0] + this[5] * x[1] + this[9] * x[2] + this[13] + x[3],
-				this[2] * x[0] + this[6] * x[1] + this[10] * x[2] + this[14] + x[3],
-				this[3] * x[0] + this[7] * x[1] + this[11] * x[2] + this[15] + x[3],
-				this[0] * x[4] + this[4] * x[5] + this[8] * x[6] + this[12] + x[7],
-				this[1] * x[4] + this[5] * x[5] + this[9] * x[6] + this[13] + x[7],
-				this[2] * x[4] + this[6] * x[5] + this[10] * x[6] + this[14] + x[7],
-				this[3] * x[4] + this[7] * x[5] + this[11] * x[6] + this[15] + x[7],
-				this[0] * x[8] + this[4] * x[9] + this[8] * x[10] + this[12] + x[11],
-				this[1] * x[8] + this[5] * x[9] + this[9] * x[10] + this[13] + x[11],
-				this[2] * x[8] + this[6] * x[9] + this[10] * x[10] + this[14] + x[11],
-				this[3] * x[8] + this[7] * x[9] + this[11] * x[10] + this[15] + x[11],
-				this[0] * x[12] + this[4] * x[13] + this[8] * x[14] + this[12] + x[15],
-				this[1] * x[12] + this[5] * x[13] + this[9] * x[14] + this[13] + x[15],
-				this[2] * x[12] + this[6] * x[13] + this[10] * x[14] + this[14] + x[15],
-				this[3] * x[12] + this[7] * x[13] + this[11] * x[14] + this[15] + x[15]
+				this[0] * x[0] + this[4] * x[1] + this[8] * x[2] + this[12] * x[3],
+				this[1] * x[0] + this[5] * x[1] + this[9] * x[2] + this[13] * x[3],
+				this[2] * x[0] + this[6] * x[1] + this[10] * x[2] + this[14] * x[3],
+				this[3] * x[0] + this[7] * x[1] + this[11] * x[2] + this[15] * x[3],
+				this[0] * x[4] + this[4] * x[5] + this[8] * x[6] + this[12] * x[7],
+				this[1] * x[4] + this[5] * x[5] + this[9] * x[6] + this[13] * x[7],
+				this[2] * x[4] + this[6] * x[5] + this[10] * x[6] + this[14] * x[7],
+				this[3] * x[4] + this[7] * x[5] + this[11] * x[6] + this[15] * x[7],
+				this[0] * x[8] + this[4] * x[9] + this[8] * x[10] + this[12] * x[11],
+				this[1] * x[8] + this[5] * x[9] + this[9] * x[10] + this[13] * x[11],
+				this[2] * x[8] + this[6] * x[9] + this[10] * x[10] + this[14] * x[11],
+				this[3] * x[8] + this[7] * x[9] + this[11] * x[10] + this[15] * x[11],
+				this[0] * x[12] + this[4] * x[13] + this[8] * x[14] + this[12] * x[15],
+				this[1] * x[12] + this[5] * x[13] + this[9] * x[14] + this[13] * x[15],
+				this[2] * x[12] + this[6] * x[13] + this[10] * x[14] + this[14] * x[15],
+				this[3] * x[12] + this[7] * x[13] + this[11] * x[14] + this[15] * x[15]
 			]);
 		} else if (x instanceof OOGL.Vector4) {
 			return new OOGL.Vector4(
@@ -2747,17 +2747,17 @@ OOGL.RotationMatrix4 = function (x, y, z, a) {
 	var s = Math.sin(a);
 	var c = Math.cos(a);
 	return new OOGL.Matrix4([
-		c + x * x * (1 - c),
-		x * y * (1 - c) - z * s,
-		x * z * (1 - c) + y * s,
+		x * x * (1 - c) + c,
+		x * y * (1 - c) + z * s,
+		x * z * (1 - c) - y * s,
 		0,
-		y * x * (1 - c) + z * s,
-		c + y * y * (1 - c),
-		y * z * (1 - c) - x * s,
+		y * x * (1 - c) - z * s,
+		y * y * (1 - c) + c,
+		y * z * (1 - c) + x * s,
 		0,
-		z * x * (1 - c) - y * s,
-		z * y * (1 - c) + x * s,
-		c + z * z * (1 - c),
+		z * x * (1 - c) + y * s,
+		z * y * (1 - c) - x * s,
+		z * z * (1 - c) + c,
 		0,
 		0,
 		0,
