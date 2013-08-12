@@ -66,7 +66,10 @@ OOGL(function () {
 					frame.setTransform(/sx_femore/, new OOGL.RotationMatrix4(0, 0, 1,
 						sineRange(1, -0.5, Math.sin((timestamp * 5) % (Math.PI * 2)))));
 
-					frame.setTransform(/ginocchio/, new OOGL.RotationMatrix4(0, 0, 1, 1));
+					frame.setTransform(/dx_ginocchio/, new OOGL.RotationMatrix4(0, 0, 1,
+						sineRange(1, 0, -Math.cos((timestamp * 5) % (Math.PI * 2)))));
+					frame.setTransform(/sx_ginocchio/, new OOGL.RotationMatrix4(0, 0, 1,
+						sineRange(1, 0, Math.cos((timestamp * 5) % (Math.PI * 2)))));
 
 					oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
 					program.uniform1f('Zoom', zoom);
