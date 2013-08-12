@@ -53,23 +53,29 @@ OOGL(function () {
 					return range(-1, 1, c, d, x);
 				}
 
+				frame.setTransform(/root/, new OOGL.XRotationMatrix4(0.3));
+				frame.setTransform(/testa/, new OOGL.YRotationMatrix4(-0.3));
+				frame.setTransform(/dx_spalla/, new OOGL.ZRotationMatrix4(1));
+				frame.setTransform(/sx_spalla/, new OOGL.ZRotationMatrix4(-1));
+				frame.setTransform(/gomito/, new OOGL.YRotationMatrix4(-1));
+
 				var loop = new OOGL.RenderLoop(function () {
 					var timestamp = OOGL.Timing.now() / 1000;
 
-					frame.setTransform(/dx_spalla/, new OOGL.RotationMatrix4(0, 0, 1, 1));
-					frame.setTransform(/sx_spalla/, new OOGL.RotationMatrix4(0, 0, 1, -1));
-					frame.setTransform(/gomito/, new OOGL.RotationMatrix4(0, 1, 0, -1));
+					frame.setTransform(/dx_femore/, new OOGL.ZRotationMatrix4(
+						sineRange(-0.5, 1, Math.sin((timestamp * 8) % (Math.PI * 2)))
+						));
 
-					frame.setTransform(/dx_femore/, new OOGL.RotationMatrix4(0, 0, 1,
-						sineRange(-0.5, 1, Math.sin((timestamp * 5) % (Math.PI * 2)))));
+					frame.setTransform(/sx_femore/, new OOGL.ZRotationMatrix4(
+						sineRange(1, -0.5, Math.sin((timestamp * 8) % (Math.PI * 2)))
+						));
 
-					frame.setTransform(/sx_femore/, new OOGL.RotationMatrix4(0, 0, 1,
-						sineRange(1, -0.5, Math.sin((timestamp * 5) % (Math.PI * 2)))));
-
-					frame.setTransform(/dx_ginocchio/, new OOGL.RotationMatrix4(0, 0, 1,
-						sineRange(1, 0, -Math.cos((timestamp * 5) % (Math.PI * 2)))));
-					frame.setTransform(/sx_ginocchio/, new OOGL.RotationMatrix4(0, 0, 1,
-						sineRange(1, 0, Math.cos((timestamp * 5) % (Math.PI * 2)))));
+					frame.setTransform(/dx_ginocchio/, new OOGL.ZRotationMatrix4(
+						sineRange(1.5, 0, -Math.cos((timestamp * 8) % (Math.PI * 2)))
+						));
+					frame.setTransform(/sx_ginocchio/, new OOGL.ZRotationMatrix4(
+						sineRange(1.5, 0, Math.cos((timestamp * 8) % (Math.PI * 2)))
+						));
 
 					oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
 					program.uniform1f('Zoom', zoom);
