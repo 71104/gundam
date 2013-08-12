@@ -55,27 +55,27 @@ OOGL(function () {
 
 				frame.setTransform(/root/, new OOGL.XRotationMatrix4(0.3));
 				frame.setTransform(/testa/, new OOGL.YRotationMatrix4(-0.3));
-				frame.setTransform(/dx_spalla/, new OOGL.ZRotationMatrix4(1));
-				frame.setTransform(/sx_spalla/, new OOGL.ZRotationMatrix4(-1));
+				frame.setTransform(/dx_spalla/, new OOGL.ZRotationMatrix4(0.4));
+				frame.setTransform(/sx_spalla/, new OOGL.ZRotationMatrix4(-0.4));
 				frame.setTransform(/gomito/, new OOGL.YRotationMatrix4(-1));
 
 				var loop = new OOGL.RenderLoop(function () {
 					var timestamp = OOGL.Timing.now() / 1000;
 
-					frame.setTransform(/dx_femore/, new OOGL.ZRotationMatrix4(
-						sineRange(-0.5, 1, Math.sin((timestamp * 8) % (Math.PI * 2)))
-						));
+					function customSine(speed) {
+						return Math.sin((timestamp * speed) % (Math.PI * 2));
+					}
+					function customCosine(speed) {
+						return Math.cos((timestamp * speed) % (Math.PI * 2));
+					}
 
-					frame.setTransform(/sx_femore/, new OOGL.ZRotationMatrix4(
-						sineRange(1, -0.5, Math.sin((timestamp * 8) % (Math.PI * 2)))
-						));
+					frame.setTransform(/dx_femore/, new OOGL.ZRotationMatrix4(sineRange(-0.5, 1.2, customSine(8))));
+					frame.setTransform(/sx_femore/, new OOGL.ZRotationMatrix4(sineRange(1.2, -0.5, customSine(8))));
+					frame.setTransform(/dx_ginocchio/, new OOGL.ZRotationMatrix4(sineRange(1.6, 0, -customCosine(8))));
+					frame.setTransform(/sx_ginocchio/, new OOGL.ZRotationMatrix4(sineRange(1.6, 0, customCosine(8))));
 
-					frame.setTransform(/dx_ginocchio/, new OOGL.ZRotationMatrix4(
-						sineRange(1.5, 0, -Math.cos((timestamp * 8) % (Math.PI * 2)))
-						));
-					frame.setTransform(/sx_ginocchio/, new OOGL.ZRotationMatrix4(
-						sineRange(1.5, 0, Math.cos((timestamp * 8) % (Math.PI * 2)))
-						));
+					frame.setTransform(/dx_clavicola/, new OOGL.XRotationMatrix4(sineRange(-1, 1, customSine(8))));
+					frame.setTransform(/sx_clavicola/, new OOGL.XRotationMatrix4(sineRange(-1, 1, customSine(8))));
 
 					oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
 					program.uniform1f('Zoom', zoom);
