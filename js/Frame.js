@@ -46,7 +46,7 @@ function Frame(document, meshes) {
 		};
 
 		this.draw = function (program, baseMatrix) {
-			mesh.draw(program, baseMatrix.by(transform).by(matrix));
+			mesh.draw(program, baseMatrix.by(matrix).by(transform));
 		};
 	}
 
@@ -98,7 +98,7 @@ function Frame(document, meshes) {
 		};
 
 		this.draw = function (program, baseMatrix) {
-			var finalMatrix = baseMatrix.by(transform).by(matrix);
+			var finalMatrix = baseMatrix.by(matrix).by(transform);
 			nodes.forEach(function (node) {
 				node.draw(program, finalMatrix);
 			});
