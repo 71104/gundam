@@ -61,7 +61,8 @@ OOGL(function () {
 				frame.setTransform(/testa/, new OOGL.YRotationMatrix4(-0.3));
 				frame.setTransform(/dx_spalla/, new OOGL.ZRotationMatrix4(0.4));
 				frame.setTransform(/sx_spalla/, new OOGL.ZRotationMatrix4(-0.4));
-				frame.setTransform(/gomito/, new OOGL.YRotationMatrix4(-1));
+				frame.setTransform(/dx_gomito/, (new OOGL.XRotationMatrix4(0.35)).by(new OOGL.YRotationMatrix4(-1.3)));
+				frame.setTransform(/sx_gomito/, (new OOGL.XRotationMatrix4(-0.35)).by(new OOGL.YRotationMatrix4(-1.3)));
 
 				var loop = new OOGL.RenderLoop(function () {
 					var timestamp = OOGL.Timing.now() / 1000;
