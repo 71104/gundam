@@ -45,6 +45,12 @@ function Frame(document, meshes) {
 			}
 		};
 
+		this.reset = function (filter) {
+			if ((filter === id) || filter && filter.test && filter.test(id)) {
+				transform = OOGL.Matrix4.IDENTITY.clone();
+			}
+		};
+
 		this.draw = function (program, baseMatrix) {
 			mesh.draw(program, baseMatrix.by(matrix).by(transform));
 		};
@@ -97,6 +103,19 @@ function Frame(document, meshes) {
 			}
 		};
 
+		this.reset = function (filter) {
+			if ((filter !== id) && (!filter || !filter.test || !filter.test(id))) {
+				nodes.forEach(function (node) {
+					node.reset(filter);
+				});
+				joints.forEach(function (joint) {
+					joint.reset(filter);
+				});
+			} else {
+				transform = OOGL.Matrix4.IDENTITY.clone();
+			}
+		};
+
 		this.draw = function (program, baseMatrix) {
 			var finalMatrix = baseMatrix.by(matrix).by(transform);
 			nodes.forEach(function (node) {
@@ -123,6 +142,12 @@ function Frame(document, meshes) {
 			node.setTransform(filter, matrix);
 		});
 	}
+
+	this.reset = function (filter) {
+		roots.forEach(function (node) {
+			node.reset(filter);
+		});
+	};
 
 	this.draw = function (program) {
 		roots.forEach(function (node) {
