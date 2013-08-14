@@ -11,6 +11,17 @@ function Mesh(document, node, oogl) {
 	]/@source\
 ]'
 			);
+		var normals = document.queryFloatArray(node,
+'./source[\
+	concat(\"#\", @id) = ../vertices/input[\
+		@semantic = \"NORMAL\"\
+	]/@source\
+]/float_array[\
+	concat(\"#\", @id) = ../technique_common/accessor[\
+		@stride = \"3\"\
+	]/@source\
+]'
+			);
 		var textureCoordinates = document.queryFloatArray(node,
 './source[\
 	concat(\"#\", @id) = ../polylist/input[\
@@ -32,19 +43,30 @@ function Mesh(document, node, oogl) {
 	@semantic = \"VERTEX\"\
 ]/@offset'
 			), 10);
+		var normalOffset = parseInt(document.queryString(node,
+'./polylist/input[\
+	@semantic = \"NORMAL\"\
+]/@offset'
+			), 10);
 		var textureCoordinateOffset = parseInt(document.queryString(node,
 './polylist/input[\
 	@semantic = \"TEXCOORD\"\
 ]/@offset'
 			), 10);
 
+		var finalCount = 0;
 		var finalPositions = [];
+		var finalNormals = [];
 		var finalTextureCoordinates = [];
 
 		function pushVertex(i) {
+			finalCount++;
 			finalPositions.push(positions[indices[i + positionOffset] * 3]);
 			finalPositions.push(positions[indices[i + positionOffset] * 3 + 1]);
 			finalPositions.push(positions[indices[i + positionOffset] * 3 + 2]);
+			finalNormals.push(normals[indices[i + normalOffset] * 3]);
+			finalNormals.push(normals[indices[i + normalOffset] * 3 + 1]);
+			finalNormals.push(normals[indices[i + normalOffset] * 3 + 2]);
 			finalTextureCoordinates.push(textureCoordinates[indices[i + textureCoordinateOffset] * 2]);
 			finalTextureCoordinates.push(textureCoordinates[indices[i + textureCoordinateOffset] * 2 + 1]);
 		}
@@ -69,8 +91,9 @@ function Mesh(document, node, oogl) {
 			i += stride * count;
 		});
 
-		var arrays = new oogl.AttributeArrays(finalPositions.length / 3);
+		var arrays = new oogl.AttributeArrays(finalCount);
 		arrays.add3f(finalPositions);
+		arrays.add3f(finalNormals);
 		arrays.add2f(finalTextureCoordinates);
 		arrays.enable();
 		return arrays;

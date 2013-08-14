@@ -5,8 +5,10 @@ uniform vec2 Translation;
 uniform mat4 Matrix;
 
 attribute vec3 in_Vertex;
+attribute vec3 in_Normal;
 attribute vec2 in_TexCoord;
 
+varying vec4 ex_Normal;
 varying vec2 ex_TexCoord;
 
 mat4 RotateX(float a) {
@@ -30,6 +32,7 @@ mat4 RotateY(float a) {
 }
 
 void main() {
+	vec4 TransformedVertex = RotateX(Rotation.x) * RotateY(Rotation.y) * Matrix * vec4(in_Vertex, 1);
 	gl_Position = mat4(
 		1.0 / ScreenRatio, 0, 0, 0,
 		0, 1, 0, 0,
@@ -40,6 +43,7 @@ void main() {
 		0, 1, 0, 0,
 		0, 0, 1, 0,
 		Translation, 0, 1
-	) * RotateX(Rotation.x) * RotateY(Rotation.y) * Matrix * vec4(in_Vertex, 1);
+	) * TransformedVertex;
+	ex_Normal = RotateX(Rotation.x) * RotateY(Rotation.y) * Matrix * vec4(in_Normal + in_Vertex, 1) - TransformedVertex;
 	ex_TexCoord = in_TexCoord;
 }

@@ -35,7 +35,7 @@ OOGL(function () {
 		});
 		var frame = new Frame(document, meshes);
 		new oogl.AsyncTexture('media/img/gundam.png', function () {
-			var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_TexCoord'], function () {
+			var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_Normal', 'in_TexCoord'], function () {
 				var zoom = 0.05;
 				var angleX = 0;
 				var angleY = 0;
