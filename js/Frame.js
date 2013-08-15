@@ -51,6 +51,10 @@ function Frame(document, meshes) {
 			}
 		};
 
+		this.interpolate = function (timestamp) {
+			// TODO
+		};
+
 		this.draw = function (program, baseMatrix) {
 			mesh.draw(program, baseMatrix.by(matrix).by(transform));
 		};
@@ -116,6 +120,15 @@ function Frame(document, meshes) {
 			}
 		};
 
+		this.interpolate = function (timestamp) {
+			nodes.forEach(function (node) {
+				node.interpolate(timestamp);
+			});
+			joints.forEach(function (joint) {
+				joint.interpolate(timestamp);
+			});
+		};
+
 		this.draw = function (program, baseMatrix) {
 			var finalMatrix = baseMatrix.by(matrix).by(transform);
 			nodes.forEach(function (node) {
@@ -146,6 +159,12 @@ function Frame(document, meshes) {
 	this.reset = function (filter) {
 		roots.forEach(function (node) {
 			node.reset(filter);
+		});
+	};
+
+	this.interpolate = function (timestamp) {
+		roots.forEach(function (node) {
+			node.interpolate(timestamp);
 		});
 	};
 
