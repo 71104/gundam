@@ -6808,6 +6808,32 @@ context.AutoProgram = function (vertexSource, fragmentSource, attributes) {
 		return fragmentShader;
 	};
 
+	/**
+	 * TODO
+	 *
+	 * @method enableVertexAttribArrays
+	 * @example
+	 *	TODO
+	 */
+	program.enableVertexAttribArrays = function () {
+		for (var i = 0; i < attributes.length; i++) {
+			context.enableVertexAttribArray(i);
+		}
+	};
+
+	/**
+	 * TODO
+	 *
+	 * @method disableVertexAttribArrays
+	 * @example
+	 *	TODO
+	 */
+	program.disableVertexAttribArrays = function () {
+		for (var i = 0; i < attributes.length; i++) {
+			context.disableVertexAttribArray(i);
+		}
+	};
+
 	program.attachShader(vertexShader);
 	program.attachShader(fragmentShader);
 	program.bindAttribLocations(attributes);
@@ -6887,6 +6913,32 @@ context.AjaxProgram = function (name, attributes, callback) {
 		 */
 		program.getFragmentShader = function () {
 			return fragmentShader;
+		};
+
+		/**
+		 * TODO
+		 *
+		 * @method enableVertexAttribArrays
+		 * @example
+		 *	TODO
+		 */
+		program.enableVertexAttribArrays = function () {
+			for (var i = 0; i < attributes.length; i++) {
+				context.enableVertexAttribArray(i);
+			}
+		};
+
+		/**
+		 * TODO
+		 *
+		 * @method disableVertexAttribArrays
+		 * @example
+		 *	TODO
+		 */
+		program.disableVertexAttribArrays = function () {
+			for (var i = 0; i < attributes.length; i++) {
+				context.disableVertexAttribArray(i);
+			}
 		};
 
 		program.bindAttribLocations(attributes);
