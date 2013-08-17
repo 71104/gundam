@@ -77,13 +77,20 @@ if (typeof $ === 'undefined') {
 /*global OOGL: false */
 
 /**
+ * @module OOGL
+ */
+
+/**
  * Static class providing timing-related functions.
  *
  * @class OOGL.Timing
  * @module OOGL
  * @static
  * @example
- *	TODO
+ *	var loop = new OOGL.RenderLoop(function () {
+ *		console.log(OOGL.Timing.now());
+ *	});
+ *	loop.start();
  */
 OOGL.Timing = {
 	/**
@@ -96,17 +103,16 @@ OOGL.Timing = {
 	 * @static
 	 * @return {Number} The current timestamp in milliseconds.
 	 * @example
-	 *	TODO
+	 *	var loop = new OOGL.RenderLoop(function () {
+	 *		console.log(OOGL.Timing.now());
+	 *	});
+	 *	loop.start();
 	 */
 	now: (function () {
 		if (('performance' in window) && ('now' in window.performance)) {
-			return function () {
-				return window.performance.now();
-			};
+			return window.performance.now.bind(window.performance);
 		} else {
-			return function () {
-				return Date.now();
-			};
+			return Date.now.bind(Date);
 		}
 	})()
 };
@@ -446,18 +452,27 @@ OOGL.Ajax = new (function () {
 /*global OOGL: false */
 
 /**
+ * @module OOGL
+ */
+
+/**
  * Represents a queue of asynchronous tasks. This is mainly used to manage
  * asynchronous asset loading and is inherited by
  * {{#crossLink "context.Loader"}}Loader{{/crossLink}}.
  *
+ * A task is a function that executes a job and can be either synchronous or
+ * asynchronous.
+ *
+ * A synchronous task runs synchronously and its job terminates as soon as the
+ * function returns.
+ *
+ * An asynchronous task, instead, runs asynchronously and always receives one
+ * single argument, a callback function that is invoked by the task as soon as
+ * it ends.
+ *
  * @class OOGL.TaskQueue
  * @constructor
- * @param tasks* {Function} Zero or more asynchronous tasks to queue. An
- * asynchronous task is a function that takes only one argument, a reference to
- * a callback function to be called by the task itself when it is accomplished.
- * @param tasks.next {Function} A reference to a callback function to be called
- * by the task as soon as it finished. The `next` callback is not user-defined,
- * it is passed to the task by the `TaskQueue` object.
+ * @param tasks* {Function} Zero or more asynchronous tasks to queue.
  * @example
  *	TODO
  */
@@ -474,26 +489,21 @@ OOGL.TaskQueue = function () {
 	 *
 	 * @method queue
 	 * @chainable
-	 * @param tasks* {Function} Zero or more asynchronous tasks to queue. An
-	 * asynchronous task is a function that takes only one argument, a reference
-	 * to a callback function to be called by the task itself when it is
-	 * accomplished.
-	 * @param tasks.next {Function} A reference to a callback function to be
-	 * called by the task as soon as it finished. The `next` callback is not
-	 * user-defined, it is passed to the task by the `TaskQueue` object.
+	 * @param tasks* {Function} Zero or more asynchronous tasks to queue.
 	 * @example
 	 *	TODO
 	 */
-	this.queue = enqueue;
+	this.queue = function () {
+		queue.push.apply(queue, arguments);
+		return thisObject;
+	};
 
 	/**
 	 * Queues zero or more synchronous tasks.
 	 *
 	 * @method queueSync
 	 * @chainable
-	 * @param tasks* {Function} Zero or more synchronous tasks. A synchronous
-	 * task is a function that executes synchronously. The next task in the
-	 * queue is executed as soon as the function returns.
+	 * @param tasks* {Function} Zero or more synchronous tasks to queue.
 	 * @example
 	 *	TODO
 	 */
@@ -528,7 +538,15 @@ OOGL.TaskQueue = function () {
 	 * @chainable
 	 * @param [callback] {Function} An optional user-defined callback function
 	 * that gets invoked as soon as all the tasks finish.
-	 * @param [progress] {Function} TODO
+	 * @param [progress] {Function} An optional user-defined callback function
+	 * that gets invoked every time a task ends.
+	 * @param progress.progress {Number} A percentage value indicating the
+	 * current progress, computed by the following formula:
+	 *
+	 *	i * 100 / c
+	 *
+	 * Where `i` indicates the zero-based index of the last executed task and
+	 * `c` indicates the total number of queued tasks.
 	 * @example
 	 *	TODO
 	 */
@@ -5766,7 +5784,9 @@ context.AjaxVertexShader = function (url, callback) {
 	var shader = new context.Shader(context.VERTEX_SHADER);
 	OOGL.Ajax.get(url, function (source) {
 		shader.source(source);
-		shader.compileOrThrow();
+		if (!context.getShaderParameter(shader, context.COMPILE_STATUS)) {
+			throw 'Failed to compile <' + url + '>, info log follows.\n' + context.getShaderInfoLog(shader);
+		}
 		callback && callback.call(shader);
 	});
 	return shader;
@@ -5797,7 +5817,9 @@ context.AjaxFragmentShader = function (url, callback) {
 	var shader = new context.Shader(context.FRAGMENT_SHADER);
 	OOGL.Ajax.get(url, function (source) {
 		shader.source(source);
-		shader.compileOrThrow();
+		if (!context.getShaderParameter(shader, context.COMPILE_STATUS)) {
+			throw 'Failed to compile <' + url + '>, info log follows.\n' + context.getShaderInfoLog(shader);
+		}
 		callback && callback.call(shader);
 	});
 	return shader;
@@ -7206,17 +7228,18 @@ context.Renderbuffer = function () {
 /*global context: false */
 
 /**
+ * @module context
+ */
+
+/**
  * Manages asynchronous asset loading with progress feedback.
  *
  * @class context.Loader
  * @extends OOGL.TaskQueue
  * @constructor
- * @param tasks* {Function} Zero or more asynchronous tasks to queue. An
- * asynchronous task is a function that takes only one argument, a reference to
- * a callback function to be called by the task itself when it is accomplished.
- * @param tasks.next {Function} A reference to a callback function to be called
- * by the task as soon as it finished. The `next` callback is not user-defined,
- * it is passed to the task by the `Loader` object.
+ * @param tasks* {Function} Zero or more asynchronous tasks to queue. See the
+ * {{#crossLink "OOGL.TaskQueue"}}TaskQueue{{/crossLink}} description for more
+ * information.
  * @example
  *	TODO
  */
@@ -7230,15 +7253,24 @@ context.Loader = function () {
 	 * Queues an asynchronous task that loads and creates a texture given its
 	 * URL.
 	 *
-	 * After being loaded the texture can be retrieved via the
+	 * Internally the `queueTexture` method uses the
+	 * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} class.
+	 *
+	 * After being loaded, the texture can be retrieved via the
 	 * {{#crossLink "OOGL.Loader/getTexture"}}getTexture{{/crossLink}} method as
 	 * a {{#crossLink "context.Texture2D"}}Texture2D{{/crossLink}} object.
 	 *
 	 * @method queueTexture
 	 * @chainable
 	 * @param id {String} The URL of the texture image to load.
-	 * @param [minFilter=gl.LINEAR] {Number} TODO
-	 * @param [magFilter=gl.LINEAR] {Number} TODO
+	 * @param [magFilter=gl.LINEAR] {Number} An optional value for the
+	 * magnifying filter. See
+	 * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} for more
+	 * information.
+	 * @param [minFilter=gl.LINEAR] {Number} An optional value for the minifying
+	 * filter. See
+	 * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} for more
+	 * information.
 	 * @example
 	 *	TODO
 	 */
@@ -7250,15 +7282,18 @@ context.Loader = function () {
 			minFilter = context.LINEAR;
 		}
 		return thisObject.queue(function (next) {
-			textures[id] = new context.AutoTexture(id, next, minFilter, magFilter);
+			textures[id] = new context.AsyncTexture(id, next, minFilter, magFilter);
 		});
 	};
 
 	/**
-	 * Queues an asynchronous task that loads and creates zero or more textures
+	 * Queues asynchronous tasks that load and create zero or more textures
 	 * given their URLs.
 	 *
-	 * After being loaded the textures can be retrieved via the
+	 * Internally the `queueTextures` method uses the
+	 * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} class.
+	 *
+	 * After being loaded, the textures can be retrieved via the
 	 * {{#crossLink "OOGL.Loader/getTexture"}}getTexture{{/crossLink}} method as
 	 * {{#crossLink "context.Texture2D"}}Texture2D{{/crossLink}} objects.
 	 *
@@ -7271,7 +7306,7 @@ context.Loader = function () {
 	this.queueTextures = function (ids) {
 		return thisObject.queue.apply(thisObject, ids.map(function (id) {
 			return function (next) {
-				textures[id] = new context.AutoTexture(id, next);
+				textures[id] = new context.AsyncTexture(id, next);
 			};
 		}));
 	};
@@ -7295,12 +7330,13 @@ context.Loader = function () {
 
 	/**
 	 * Queues an asynchronous task that loads, compiles and links the specified
-	 * shader pair.
+	 * shader pair, and returns it as a
+	 * {{#crossLink "context.Program"}}Program{{/crossLink}} object.
 	 *
 	 * Internally the `queueProgram` method uses the
 	 * {{#crossLink "context.AjaxProgram"}}AjaxProgram{{/crossLink}} class.
 	 *
-	 * The loaded programs can then be retrieved using the
+	 * The loaded program can then be retrieved using the
 	 * {{#crossLink "context.Loader/getProgram"}}getProgram{{/crossLink}}
 	 * method.
 	 *
@@ -7323,8 +7359,9 @@ context.Loader = function () {
 	};
 
 	/**
-	 * Queues an asynchronous task that loads, compiles and links zero or more
-	 * shader pairs.
+	 * Queues asynchronous tasks that load, compile and link zero or more shader
+	 * pairs, and return them as
+	 * {{#crossLink "context.Program"}}Program{{/crossLink}} objects.
 	 *
 	 * Internally the `queuePrograms` method uses the
 	 * {{#crossLink "context.AjaxProgram"}}AjaxProgram{{/crossLink}} class to
