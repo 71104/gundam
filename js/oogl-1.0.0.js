@@ -157,7 +157,10 @@ OOGL.Ajax = new (function () {
 
 	function makeRequest(method, settings) {
 		var callback = settings.callback;
-		var json = settings.json;
+		var json = (settings.type === 'json');
+		if (json) {
+			settings.type = ''; // XXX the "json" type is not supported by the major browsers
+		}
 		var xhr = new XHR(function () {
 			if (xhr.readyState === 4) {
 				if (xhr.status === 200) {
@@ -326,8 +329,7 @@ OOGL.Ajax = new (function () {
 		return function (url, data, callback) {
 			var settings = {
 				url: '' + url,
-				type: '',
-				json: true
+				type: 'json'
 			};
 			if (typeof data !== 'object') {
 				if (typeof data !== 'function') {
