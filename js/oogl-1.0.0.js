@@ -493,6 +493,8 @@ OOGL.TaskQueue = function () {
 		queue.push(arguments[i]);
 	}
 
+	var data = {};
+
 	/**
 	 * Queues zero or more asynchronous tasks.
 	 *
@@ -526,6 +528,84 @@ OOGL.TaskQueue = function () {
 			})(arguments[i]);
 		}
 		return thisObject;
+	};
+
+	/**
+	 * Queues a task that loads a file of the specified type via AJAX.
+	 *
+	 * @method queueData
+	 * @param id {String} The URL of the file.
+	 * @param [parameters] {Object} An optional object containing parameters to
+	 * be passed to the server in the AJAX request. It specified directly to the
+	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
+	 * @param type {String} The data type, specified directly to the
+	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
+	 * @example
+	 *	TODO
+	 */
+	this.queueData = function (id, parameters, type) {
+		if (arguments.length > 2) {
+			return thisObject.queue(function (next) {
+				OOGL.Ajax.get(id, parameters, function (response) {
+					data[id] = response;
+					next();
+				}, type);
+			});
+		} else {
+			type = data;
+			return thisObject.queue(function (next) {
+				OOGL.Ajax.get(id, function (response) {
+					data[id] = response;
+					next();
+				}, type);
+			});
+		}
+	};
+
+	/**
+	 * Queues a task that loads JSON data via AJAX.
+	 *
+	 * @method queueJSON
+	 * @param id {String} The URL of the JSON data.
+	 * @param [parameters] {Object} An optional object containing parameters to
+	 * be passed to the server in the AJAX request. It specified directly to the
+	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.getJSON{{/crossLink}} method.
+	 * @example
+	 *	TODO
+	 */
+	this.queueJSON = function (id, parameters) {
+		if (arguments.length > 1) {
+			return thisObject.queue(function (next) {
+				OOGL.Ajax.getJSON(id, parameters, function (response) {
+					data[id] = response;
+					next();
+				});
+			});
+		} else {
+			return thisObject.queue(function (next) {
+				OOGL.Ajax.getJSON(id, function (response) {
+					data[id] = response;
+					next();
+				});
+			});
+		}
+	};
+
+	/**
+	 * Retrieves data previously loaded via the
+	 * {{#crossLink "OOGL.TaskQueue/queueData"}}queueData{{/crossLink}} or
+	 * {{#crossLink "OOGL.TaskQueue/queueJSON"}}queueJSON{{/crossLink}} method.
+	 *
+	 * @method getData
+	 * @param id {String} The URL of the requested data.
+	 * @return {Object} The requested data.
+	 * @example
+	 *	TODO
+	 */
+	this.getData = function (id) {
+		if (data.hasOwnProperty(id)) {
+			return data[id];
+		}
 	};
 
 	/**
@@ -4495,7 +4575,7 @@ context.AttributeArrays = function (count) {
 		 *	arrays.add4b([1, 2, 3, 4, -1, -2, -3, -4]);
 		 */
 		add4b: function (data, normalize) {
-			arrays.push(new context.AttributeArray3(arrays.length, 'byte', data, normalize));
+			arrays.push(new context.AttributeArray4(arrays.length, 'byte', data, normalize));
 		},
 
 		/**
@@ -4510,7 +4590,7 @@ context.AttributeArrays = function (count) {
 		 *	arrays.add4ub([1, 2, 3, 4, 5, 6, 7, 8]);
 		 */
 		add4ub: function (data, normalize) {
-			arrays.push(new context.AttributeArray3(arrays.length, 'ubyte', data, normalize));
+			arrays.push(new context.AttributeArray4(arrays.length, 'ubyte', data, normalize));
 		},
 
 		/**
@@ -4526,7 +4606,7 @@ context.AttributeArrays = function (count) {
 		 *	arrays.add4s([1, 2, 3, 4, -5, -6, -7, -8]);
 		 */
 		add4s: function (data, normalize) {
-			arrays.push(new context.AttributeArray3(arrays.length, 'short', data, normalize));
+			arrays.push(new context.AttributeArray4(arrays.length, 'short', data, normalize));
 		},
 
 		/**
@@ -4542,7 +4622,7 @@ context.AttributeArrays = function (count) {
 		 *	arrays.add4us([1, 2, 3, 4, 5, 6, 7, 8]);
 		 */
 		add4us: function (data, normalize) {
-			arrays.push(new context.AttributeArray3(arrays.length, 'ushort', data, normalize));
+			arrays.push(new context.AttributeArray4(arrays.length, 'ushort', data, normalize));
 		},
 
 		/**
@@ -4558,7 +4638,7 @@ context.AttributeArrays = function (count) {
 		 *	arrays.add4f([1, 2, 3, 4, 5, 6, 7, 8]);
 		 */
 		add4f: function (data, normalize) {
-			arrays.push(new context.AttributeArray3(arrays.length, 'float', data, normalize));
+			arrays.push(new context.AttributeArray4(arrays.length, 'float', data, normalize));
 		},
 
 		/**
@@ -7320,7 +7400,6 @@ context.Loader = function () {
 
 	var textures = {};
 	var programs = {};
-	var data = {};
 
 	/**
 	 * Queues an asynchronous task that loads and creates a texture given its
@@ -7347,7 +7426,7 @@ context.Loader = function () {
 	 * @example
 	 *	TODO
 	 */
-	this.queueTexture = function (id, minFilter, magFilter) {
+	this.queueTexture = function (id, magFilter, minFilter) {
 		if (arguments.length < 2) {
 			magFilter = context.LINEAR;
 			minFilter = context.LINEAR;
@@ -7355,7 +7434,7 @@ context.Loader = function () {
 			minFilter = context.LINEAR;
 		}
 		return thisObject.queue(function (next) {
-			textures[id] = new context.AsyncTexture(id, next, minFilter, magFilter);
+			textures[id] = new context.AsyncTexture(id, next, magFilter, minFilter);
 		});
 	};
 
@@ -7373,13 +7452,27 @@ context.Loader = function () {
 	 * @method queueTextures
 	 * @chainable
 	 * @param ids {String[]} An array of image URLs.
+	 * @param [magFilter=gl.LINEAR] {Number} An optional value for the
+	 * magnifying filter. See
+	 * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} for more
+	 * information.
+	 * @param [minFilter=gl.LINEAR] {Number} An optional value for the minifying
+	 * filter. See
+	 * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} for more
+	 * information.
 	 * @example
 	 *	TODO
 	 */
-	this.queueTextures = function (ids) {
+	this.queueTextures = function (ids, magFilter, minFilter) {
+		if (arguments.length < 2) {
+			magFilter = context.LINEAR;
+			minFilter = context.LINEAR;
+		} else if (arguments.length < 3) {
+			minFilter = context.LINEAR;
+		}
 		return thisObject.queue.apply(thisObject, ids.map(function (id) {
 			return function (next) {
-				textures[id] = new context.AsyncTexture(id, next);
+				textures[id] = new context.AsyncTexture(id, next, magFilter, minFilter);
 			};
 		}));
 	};
@@ -7489,84 +7582,6 @@ context.Loader = function () {
 	this.getProgram = function (id) {
 		if (programs.hasOwnProperty(id)) {
 			return programs[id];
-		}
-	};
-
-	/**
-	 * Queues a task that loads a file of the specified type via AJAX.
-	 *
-	 * @method queueData
-	 * @param id {String} The URL of the file.
-	 * @param [parameters] {Object} An optional object containing parameters to
-	 * be passed to the server in the AJAX request. It specified directly to the
-	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
-	 * @param type {String} The data type, specified directly to the
-	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
-	 * @example
-	 *	TODO
-	 */
-	this.queueData = function (id, parameters, type) {
-		if (arguments.length > 2) {
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.get(id, parameters, function (response) {
-					data[id] = response;
-					next();
-				}, type);
-			});
-		} else {
-			type = data;
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.get(id, function (response) {
-					data[id] = response;
-					next();
-				}, type);
-			});
-		}
-	};
-
-	/**
-	 * Queues a task that loads JSON data via AJAX.
-	 *
-	 * @method queueJSON
-	 * @param id {String} The URL of the JSON data.
-	 * @param [parameters] {Object} An optional object containing parameters to
-	 * be passed to the server in the AJAX request. It specified directly to the
-	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.getJSON{{/crossLink}} method.
-	 * @example
-	 *	TODO
-	 */
-	this.queueJSON = function (id, parameters) {
-		if (arguments.length > 1) {
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.getJSON(id, parameters, function (response) {
-					data[id] = response;
-					next();
-				});
-			});
-		} else {
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.getJSON(id, function (response) {
-					data[id] = response;
-					next();
-				});
-			});
-		}
-	};
-
-	/**
-	 * Retrieves data previously loaded via the
-	 * {{#crossLink "context.Loader/queueData"}}queueData{{/crossLink}} or
-	 * {{#crossLink "context.Loader/queueJSON"}}queueJSON{{/crossLink}} method.
-	 *
-	 * @method getData
-	 * @param id {String} The URL of the requested data.
-	 * @return {Object} The requested data.
-	 * @example
-	 *	TODO
-	 */
-	this.getData = function (id) {
-		if (data.hasOwnProperty(id)) {
-			return data[id];
 		}
 	};
 };
