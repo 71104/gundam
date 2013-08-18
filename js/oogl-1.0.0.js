@@ -156,11 +156,17 @@ OOGL.Ajax = new (function () {
 	}
 
 	function makeRequest(method, settings) {
+		var callback = settings.callback;
+		var json = settings.json;
 		var xhr = new XHR(function () {
 			if (xhr.readyState === 4) {
 				if (xhr.status === 200) {
-					if (settings.hasOwnProperty('callback')) {
-						settings.callback(xhr.response);
+					if (callback) {
+						if (json) {
+							callback(JSON.parse(xhr.responseText));
+						} else {
+							callback(xhr.response);
+						}
 					}
 				} else {
 					errorCallback();
@@ -320,7 +326,8 @@ OOGL.Ajax = new (function () {
 		return function (url, data, callback) {
 			var settings = {
 				url: '' + url,
-				type: 'json'
+				type: '',
+				json: true
 			};
 			if (typeof data !== 'object') {
 				if (typeof data !== 'function') {
