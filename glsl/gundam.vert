@@ -1,3 +1,5 @@
+precision mediump float;
+
 uniform float ScreenRatio;
 uniform float Zoom;
 uniform vec2 Rotation;
