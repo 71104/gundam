@@ -1,4 +1,4 @@
-/*! Object-Oriented Graphics Library - v1.0.0 - 2013-08-18
+/*! Object-Oriented Graphics Library - v1.0.0 - 2013-08-23
 * Released under the MIT License
 * http://oogljs.com/
 * Copyright (c) 2013 Alberto La Rocca */
@@ -465,195 +465,143 @@ OOGL.Ajax = new (function () {
  */
 
 /**
- * Represents a queue of asynchronous tasks. This is mainly used to manage
- * asynchronous asset loading and is inherited by
- * {{#crossLink "context.Loader"}}Loader{{/crossLink}}.
+ * Manages the serial and parallel execution of asynchronous tasks.
  *
- * A task is a function that executes a job and can be either synchronous or
- * asynchronous.
+ * Mainly used by {{#crossLink "context.Loader"}}Loader{{/crossLink}}.
  *
- * A synchronous task runs synchronously and its job terminates as soon as the
- * function returns.
+ * Asynchronous tasks are specified as functions receiving two arguments: one
+ * callback function to invoke as soon as the task is accomplished, and one
+ * optional object to use as `this` when invoking the callback function. Return
+ * values are ignored.
  *
- * An asynchronous task, instead, runs asynchronously and always receives one
- * single argument, a callback function that is invoked by the task as soon as
- * it ends.
- *
- * @class OOGL.TaskQueue
- * @constructor
- * @param tasks* {Function} Zero or more asynchronous tasks to queue.
- * @example
- *	TODO
+ * @class OOGL.Async
+ * @static
  */
-OOGL.TaskQueue = function () {
-	var thisObject = this;
-
-	var queue = [];
-	for (var i = 0; i < arguments.length; i++) {
-		queue.push(arguments[i]);
-	}
-
-	var data = {};
-
+OOGL.Async = {
 	/**
-	 * Queues zero or more asynchronous tasks.
+	 * Creates an asynchronous task from a synchronous one.
 	 *
-	 * @method queue
-	 * @chainable
-	 * @param tasks* {Function} Zero or more asynchronous tasks to queue.
+	 * The returned task function invokes the task function (without specifying
+	 * any arguments) and subsequently invokes the callback function, if
+	 * specified.
+	 *
+	 * @method async
+	 * @static
+	 * @param task {Function} A synchronous task function.
+	 * @return {Function} A new asynchronous task function.
+	 *
+	 * The returned function does not return anything but expects two optional
+	 * arguments: the first is a user-defined callback function invoked when all
+	 * the tasks have been executed, the second is a scope object to use as
+	 * `this` while invoking the callback function.
+	 *
+	 * The returned function may be specified as a task for
+	 * {{#crossLink "OOGL.Async/serial"}}serial{{/crossLink}} and
+	 * {{#crossLink "OOGL.Async/parallel"}}parallel{{/crossLink}}.
 	 * @example
 	 *	TODO
 	 */
-	this.queue = function () {
-		queue.push.apply(queue, arguments);
-		return thisObject;
-	};
+	async: function (task) {
+		return function (callback, scope) {
+			task();
+			callback && callback.call(scope);
+		};
+	},
 
 	/**
-	 * Queues zero or more synchronous tasks.
+	 * Creates an asynchronous task that executes the specified asynchronous
+	 * tasks serially.
 	 *
-	 * @method queueSync
-	 * @chainable
-	 * @param tasks* {Function} Zero or more synchronous tasks to queue.
+	 * @method serial
+	 * @static
+	 * @param [tasks]* {Function} Zero or more task functions.
+	 * @param tasks.next {Function} A callback function that must be invoked by
+	 * each task as soon as it is accomplished.
+	 * @param [tasks.scope] {Object} An optional object the task must use as
+	 * `this` when invoking the `next` callback.
+	 * @return {Function} A function that starts the execution.
+	 *
+	 * The returned function does not return anything but expects two optional
+	 * arguments: the first is a user-defined callback function invoked when all
+	 * the tasks have been executed, the second is a scope object to use as
+	 * `this` while invoking the callback function.
+	 *
+	 * The returned function may also be specified as a task for 
+	 * {{#crossLink "OOGL.Async/parallel"}}parallel{{/crossLink}} or for another
+	 * {{#crossLink "OOGL.Async/serial"}}serial{{/crossLink}} call.
 	 * @example
 	 *	TODO
 	 */
-	this.queueSync = function () {
-		for (var i = 0; i < arguments.length; i++) {
-			(function (task) {
-				queue.push(function (next) {
-					task();
-					next();
-				});
-			})(arguments[i]);
-		}
-		return thisObject;
-	};
-
-	/**
-	 * Queues a task that loads a file of the specified type via AJAX.
-	 *
-	 * @method queueData
-	 * @param id {String} The URL of the file.
-	 * @param [parameters] {Object} An optional object containing parameters to
-	 * be passed to the server in the AJAX request. It specified directly to the
-	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
-	 * @param type {String} The data type, specified directly to the
-	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
-	 * @example
-	 *	TODO
-	 */
-	this.queueData = function (id, parameters, type) {
-		if (arguments.length > 2) {
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.get(id, parameters, function (response) {
-					data[id] = response;
-					next();
-				}, type);
-			});
+	serial: function () {
+		var tasks;
+		if ((arguments.length === 1) && (typeof arguments[0] !== 'function')) {
+			tasks = arguments[0];
 		} else {
-			type = data;
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.get(id, function (response) {
-					data[id] = response;
-					next();
-				}, type);
-			});
+			tasks = arguments;
 		}
-	};
-
-	/**
-	 * Queues a task that loads JSON data via AJAX.
-	 *
-	 * @method queueJSON
-	 * @param id {String} The URL of the JSON data.
-	 * @param [parameters] {Object} An optional object containing parameters to
-	 * be passed to the server in the AJAX request. It specified directly to the
-	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.getJSON{{/crossLink}} method.
-	 * @example
-	 *	TODO
-	 */
-	this.queueJSON = function (id, parameters) {
-		if (arguments.length > 1) {
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.getJSON(id, parameters, function (response) {
-					data[id] = response;
-					next();
-				});
-			});
-		} else {
-			return thisObject.queue(function (next) {
-				OOGL.Ajax.getJSON(id, function (response) {
-					data[id] = response;
-					next();
-				});
-			});
-		}
-	};
-
-	/**
-	 * Retrieves data previously loaded via the
-	 * {{#crossLink "OOGL.TaskQueue/queueData"}}queueData{{/crossLink}} or
-	 * {{#crossLink "OOGL.TaskQueue/queueJSON"}}queueJSON{{/crossLink}} method.
-	 *
-	 * @method getData
-	 * @param id {String} The URL of the requested data.
-	 * @return {Object} The requested data.
-	 * @example
-	 *	TODO
-	 */
-	this.getData = function (id) {
-		if (data.hasOwnProperty(id)) {
-			return data[id];
-		}
-	};
-
-	/**
-	 * Returns the number of tasks queued so far.
-	 *
-	 * @method count
-	 * @return {Number} The number of tasks queued so far.
-	 * @example
-	 *	TODO
-	 */
-	this.count = function () {
-		return queue.length;
-	};
-
-	/**
-	 * Starts executing the queued tasks in queuing order.
-	 *
-	 * @method start
-	 * @chainable
-	 * @param [callback] {Function} An optional user-defined callback function
-	 * that gets invoked as soon as all the tasks finish. The `TaskQueue` object
-	 * is used as `this` when calling the function.
-	 * @param [progress] {Function} An optional user-defined callback function
-	 * that gets invoked every time a task ends. The `TaskQueue` object is used
-	 * as `this` when calling the function.
-	 * @param progress.progress {Number} A percentage value indicating the
-	 * current progress, computed by the following formula:
-	 *
-	 *	i * 100 / c
-	 *
-	 * Where `i` indicates the zero-based index of the last executed task and
-	 * `c` indicates the total number of queued tasks.
-	 * @example
-	 *	TODO
-	 */
-	this.start = function (callback, progress) {
-		(function run(index) {
-			if (index < queue.length) {
-				queue[index](function () {
-					progress && progress.call(thisObject, index * 100 / queue.length);
-					run(index + 1);
-				});
+		return function (callback, scope) {
+			if (tasks.length) {
+				(function run(index) {
+					tasks[index](function () {
+						if (index < tasks.length - 1) {
+							run(index + 1);
+						} else {
+							callback && callback.call(scope);
+						}
+					});
+				})(0);
 			} else {
-				callback && callback.call(thisObject);
+				callback && callback.call(scope);
 			}
-		})(0);
-		return thisObject;
-	};
+		};
+	},
+
+	/**
+	 * Creates an asynchronous task that executes the specified asynchronous
+	 * tasks in parallel.
+	 *
+	 * @method parallel
+	 * @static
+	 * @param [tasks]* {Function} Zero or more task functions.
+	 * @param tasks.next {Function} A callback function that must be invoked by
+	 * each task as soon as it is accomplished.
+	 * @param [tasks.scope] {Object} An optional object the task must use as
+	 * `this` when invoking the `next` callback.
+	 * @return {Function} A function that starts the execution.
+	 *
+	 * The returned function does not return anything but expects two optional
+	 * arguments: the first is a user-defined callback function invoked when all
+	 * the tasks have been executed, the second is a scope object to use as
+	 * `this` while invoking the callback function.
+	 *
+	 * The returned function may also be specified as a task for 
+	 * {{#crossLink "OOGL.Async/serial"}}serial{{/crossLink}} or for another
+	 * {{#crossLink "OOGL.Async/parallel"}}parallel{{/crossLink}} call.
+	 * @example
+	 *	TODO
+	 */
+	parallel: function () {
+		var tasks;
+		if ((arguments.length === 1) && (typeof arguments[0] !== 'function')) {
+			tasks = arguments[0];
+		} else {
+			tasks = arguments;
+		}
+		return function (callback, scope) {
+			if (tasks.length) {
+				var count = tasks.length;
+				for (var i = 0; i < tasks.length; i++) {
+					tasks[i](function () {
+						if (!--count) {
+							callback && callback.call(scope);
+						}
+					});
+				}
+			} else {
+				callback && callback.call(scope);
+			}
+		};
+	}
 };
 
 /*global OOGL: false */
@@ -5388,6 +5336,7 @@ context.AsyncTexture = function (url, callback, magFilter, minFilter) {
 	 */
 	texture.image = new Image();
 	texture.image.addEventListener('load', function () {
+		texture.bind();
 		texture.image2D(0, context.RGBA, context.UNSIGNED_BYTE, texture.image);
 		callback && callback.call(texture);
 	}, false);
@@ -5450,14 +5399,14 @@ context.AsyncCubeMap = function (namePattern, callback, magFilter, minFilter) {
 		};
 	}
 
-	new OOGL.TaskQueue(
+	OOGL.Async.parallel(
 		bindLoadFace('+X', context.TEXTURE_CUBE_MAP_POSITIVE_X),
 		bindLoadFace('+Y', context.TEXTURE_CUBE_MAP_POSITIVE_Y),
 		bindLoadFace('+Z', context.TEXTURE_CUBE_MAP_POSITIVE_Z),
 		bindLoadFace('-X', context.TEXTURE_CUBE_MAP_NEGATIVE_X),
 		bindLoadFace('-Y', context.TEXTURE_CUBE_MAP_NEGATIVE_Y),
 		bindLoadFace('-Z', context.TEXTURE_CUBE_MAP_NEGATIVE_Z)
-	).start(callback);
+	)(callback);
 
 	return cubeMap;
 };
@@ -6971,11 +6920,11 @@ context.AjaxProgram = function (name, attributes, callback) {
 	var program = new context.Program();
 
 	var vertexShader, fragmentShader;
-	(new OOGL.TaskQueue(function (callback) {
+	OOGL.Async.parallel(function (callback) {
 		vertexShader = new context.AjaxVertexShader(name + '.vert', callback);
 	}, function (callback) {
 		fragmentShader = new context.AjaxFragmentShader(name + '.frag', callback);
-	})).start(function () {
+	})(function () {
 		program.attachShader(vertexShader);
 		program.attachShader(fragmentShader);
 
@@ -7385,21 +7334,94 @@ context.Renderbuffer = function () {
 /**
  * Manages asynchronous asset loading with progress feedback.
  *
+ * To load assets using the Loader you must first queue loading tasks using the
+ * provided `queueXxx` methods and then start the loading process using the
+ * {{#crossLink "context.Loader/loadAssets"}}loadAssets{{/crossLink}} method.
+ *
+ * The `Loader` is able to load textures, shader pairs and generic data such as
+ * XML files and JSON objects.
+ *
+ * Textures are loaded using the
+ * {{#crossLink "context.AsyncTexture"}}AsyncTexture{{/crossLink}} class. Shader
+ * pairs are loaded using the
+ * {{#crossLink "context.AjaxProgram"}}AjaxProgram{{/crossLink}} class and thus
+ * they are automatically compiled and linked, throwing an exception if
+ * compilation or linking fails.
+ *
+ * XML files are loaded via {{#crossLink "OOGL.Ajax"}}Ajax{{/crossLink}} and
+ * returned as DOM `Document` objects. JSON files are returned as natural
+ * JavaScript objects.
+ *
  * @class context.Loader
- * @extends OOGL.TaskQueue
  * @constructor
- * @param tasks* {Function} Zero or more asynchronous tasks to queue. See the
- * {{#crossLink "OOGL.TaskQueue"}}TaskQueue{{/crossLink}} description for more
- * information.
  * @example
  *	TODO
  */
 context.Loader = function () {
-	OOGL.TaskQueue.apply(this, arguments);
 	var thisObject = this;
+	var queue = [];
 
-	var textures = {};
-	var programs = {};
+	/**
+	 * Queues a task that loads a file of the specified type via AJAX.
+	 *
+	 * @method queueData
+	 * @param id {String} The URL of the file.
+	 * @param [parameters] {Object} An optional object containing parameters to
+	 * be passed to the server in the AJAX request. It specified directly to the
+	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
+	 * @param type {String} The data type, specified directly to the
+	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.get{{/crossLink}} method.
+	 * @example
+	 *	TODO
+	 */
+	this.queueData = function (id, parameters, type) {
+		if (arguments.length > 2) {
+			queue.push(function (data, textures, programs, callback, scope) {
+				OOGL.Ajax.get(id, parameters, function (response) {
+					data[id] = response;
+					callback && callback.call(scope);
+				}, type);
+			});
+		} else {
+			queue.push(function (data, textures, programs, callback, scope) {
+				OOGL.Ajax.get(id, function (response) {
+					data[id] = response;
+					callback && callback.call(scope);
+				}, type);
+			});
+		}
+		return thisObject;
+	};
+
+	/**
+	 * Queues a task that loads JSON data via AJAX.
+	 *
+	 * @method queueJSON
+	 * @param id {String} The URL of the JSON data.
+	 * @param [parameters] {Object} An optional object containing parameters to
+	 * be passed to the server in the AJAX request. It specified directly to the
+	 * {{#crossLink "OOGL.Ajax/get"}}OOGL.Ajax.getJSON{{/crossLink}} method.
+	 * @example
+	 *	TODO
+	 */
+	this.queueJSON = function (id, parameters) {
+		if (arguments.length > 1) {
+			queue.push(function (data, textures, programs, callback, scope) {
+				OOGL.Ajax.getJSON(id, parameters, function (response) {
+					data[id] = response;
+					callback && callback.call(scope);
+				});
+			});
+		} else {
+			queue.push(function (data, textures, programs, callback, scope) {
+				OOGL.Ajax.getJSON(id, function (response) {
+					data[id] = response;
+					callback && callback.call(scope);
+				});
+			});
+		}
+		return thisObject;
+	};
 
 	/**
 	 * Queues an asynchronous task that loads and creates a texture given its
@@ -7433,9 +7455,12 @@ context.Loader = function () {
 		} else if (arguments.length < 3) {
 			minFilter = context.LINEAR;
 		}
-		return thisObject.queue(function (next) {
-			textures[id] = new context.AsyncTexture(id, next, magFilter, minFilter);
+		queue.push(function (data, textures, programs, callback, scope) {
+			textures[id] = new context.AsyncTexture(id, function () {
+				callback && callback.call(scope);
+			}, magFilter, minFilter);
 		});
+		return thisObject;
 	};
 
 	/**
@@ -7470,28 +7495,14 @@ context.Loader = function () {
 		} else if (arguments.length < 3) {
 			minFilter = context.LINEAR;
 		}
-		return thisObject.queue.apply(thisObject, ids.map(function (id) {
-			return function (next) {
-				textures[id] = new context.AsyncTexture(id, next, magFilter, minFilter);
+		queue.push.apply(queue, ids.map(function (id) {
+			return function (data, textures, programs, callback, scope) {
+				textures[id] = new context.AsyncTexture(id, function () {
+					callback && callback.call(scope);
+				}, magFilter, minFilter);
 			};
 		}));
-	};
-
-	/**
-	 * Retrieves a {{#crossLink "context.Texture2D"}}Texture2D{{/crossLink}}
-	 * object loaded from the image identified by the specified URL.
-	 *
-	 * @method getTexture
-	 * @param id {String} The URL of a previously loaded texture image.
-	 * @return {context.Texture2D} A `Texture2D` object representing the GL
-	 * texture.
-	 * @example
-	 *	TODO
-	 */
-	this.getTexture = function (id) {
-		if (textures.hasOwnProperty(id)) {
-			return textures[id];
-		}
+		return thisObject;
 	};
 
 	/**
@@ -7519,9 +7530,12 @@ context.Loader = function () {
 	 *	TODO
 	 */
 	this.queueProgram = function (id, attributes) {
-		return thisObject.queue(function (next) {
-			programs[id] = new context.AjaxProgram(id, attributes, next);
+		queue.push(function (data, textures, programs, callback, scope) {
+			programs[id] = new context.AjaxProgram(id, attributes, function () {
+				callback && callback.call(scope);
+			});
 		});
+		return thisObject;
 	};
 
 	/**
@@ -7558,9 +7572,11 @@ context.Loader = function () {
 	this.queuePrograms = function (map) {
 		for (var id in map) {
 			if (map.hasOwnProperty(id)) {
-				thisObject.queue((function (id, attributes) {
-					return function (next) {
-						programs[id] = new context.AjaxProgram(id, attributes, next);
+				queue.push((function (id, attributes) {
+					return function (data, textures, programs, callback, scope) {
+						programs[id] = new context.AjaxProgram(id, attributes, function () {
+							callback && callback.call(scope);
+						});
 					};
 				})(id, map[id]));
 			}
@@ -7569,20 +7585,153 @@ context.Loader = function () {
 	};
 
 	/**
-	 * Retrieves a {{#crossLink "context.Program"}}Program{{/crossLink}} object
-	 * loaded from the shader pair identified by the specified URL.
+	 * Represents a set of loaded assets, including textures, programs and
+	 * generic data.
 	 *
-	 * @method getProgram
-	 * @param id {String} The URL of a previously loaded shader pair, not
-	 * including the filename extension.
-	 * @return {context.Program} A `Program` object representing the GL program.
+	 * Assets can be retrieved by the URLs from which they have been loaded and
+	 * the entire set may be eventually discarded.
+	 *
+	 * This class cannot be instantiated directly; instances are returned by the
+	 * {{#crossLink "context.Loader/loadAssets"}}loadAssets{{/crossLink}} method
+	 * to its callback function.
+	 *
+	 * @class context.Loader.Assets
 	 * @example
 	 *	TODO
 	 */
-	this.getProgram = function (id) {
-		if (programs.hasOwnProperty(id)) {
-			return programs[id];
-		}
+	function Assets(data, textures, programs) {
+		/**
+		 * Retrieves data previously loaded via the
+		 * {{#crossLink "context.Loader/queueData"}}queueData{{/crossLink}} or
+		 * {{#crossLink "context.Loader/queueJSON"}}queueJSON{{/crossLink}}
+		 * method.
+		 *
+		 * @method getData
+		 * @param id {String} The URL of the requested data.
+		 * @return {Object} The requested data.
+		 * @example
+		 *	TODO
+		 */
+		this.getData = function (id) {
+			if (data.hasOwnProperty(id)) {
+				return data[id];
+			}
+		};
+
+		/**
+		 * Retrieves a {{#crossLink "context.Texture2D"}}Texture2D{{/crossLink}}
+		 * object loaded from the image identified by the specified URL.
+		 *
+		 * @method getTexture
+		 * @param id {String} The URL of a previously loaded texture image.
+		 * @return {context.Texture2D} A `Texture2D` object representing the GL
+		 * texture.
+		 * @example
+		 *	TODO
+		 */
+		this.getTexture = function (id) {
+			if (textures.hasOwnProperty(id)) {
+				return textures[id];
+			}
+		};
+
+		/**
+		 * Retrieves a {{#crossLink "context.Program"}}Program{{/crossLink}}
+		 * object loaded from the shader pair identified by the specified URL.
+		 *
+		 * @method getProgram
+		 * @param id {String} The URL of a previously loaded shader pair, not
+		 * including the filename extension.
+		 * @return {context.Program} A `Program` object representing the GL
+		 * program.
+		 * @example
+		 *	TODO
+		 */
+		this.getProgram = function (id) {
+			if (programs.hasOwnProperty(id)) {
+				return programs[id];
+			}
+		};
+
+		/**
+		 * Discards all the assets managed by this object: textures and programs
+		 * are destroyed and generic data is discarded.
+		 *
+		 * After the assets have been discarded they cannot be retrieved any
+		 * more by the
+		 * {{#crossLink "context.Loader.Assets/getData"}}getData{{/crossLink}},
+		 * {{#crossLink "context.Loader.Assets/getTextures"}}getTextures{{/crossLink}}
+		 * and
+		 * {{#crossLink "context.Loader.Assets/getPrograms"}}getPrograms{{/crossLink}}
+		 * methods.
+		 */
+		this.discard = function () {
+			data = {};
+
+			var id;
+
+			for (id in textures) {
+				if (textures.hasOwnProperty(id)) {
+					textures[id]._delete();
+				}
+			}
+			textures = {};
+
+			for (id in programs) {
+				if (programs.hasOwnProperty(id)) {
+					programs[id]._delete();
+				}
+			}
+			programs = {};
+		};
+	}
+
+	/**
+	 * Executes the load tasks queued so far and discards the queue. When the
+	 * loading process finishes, a new
+	 * {{#crossLink "context.Loader.Assets"}}Assets{{/crossLink}} object is
+	 * created and can be used to retrieve the loaded assets.
+	 *
+	 * The same `Loader` object can be used to load multiple independent asset
+	 * sets: assets belonging to different sets must be queued for different
+	 * `loadAssets` calls. Each
+	 * {{#crossLink "context.Loader.Assets"}}Assets{{/crossLink}} object does
+	 * not affect the others.
+	 *
+	 * @method loadAssets
+	 * @for context.Loader
+	 * @chainable
+	 * @param callback {Function} A user-defined callback function invoked by
+	 * the `Loader` as soon as all the loading tasks have been accomplished.
+	 * @param callback.assets {context.Loader.Assets} A new `Assets` object that
+	 * can be used to retrieve and manage the loaded assets.
+	 * @param [progress] {Function} A user-defined callback function invoked
+	 * several times during the loading process. It can be used to provide
+	 * progress feedback to the user.
+	 * @param progress.progress {Number} The current progress percentage.
+	 * @example
+	 *	TODO
+	 */
+	this.loadAssets = function (callback, progress) {
+		var data = {};
+		var textures = {};
+		var programs = {};
+
+		var count = queue.length;
+		var done = 0;
+		var boundTasks = queue.map(function (task) {
+			return function (callback, scope) {
+				task(data, textures, programs, function () {
+					progress && progress(++done * 100 / count);
+					callback && callback.call(scope);
+				});
+			};
+		});
+		queue = [];
+
+		OOGL.Async.parallel(boundTasks)(function () {
+			callback(new Assets(data, textures, programs));
+		});
 	};
 };
 
