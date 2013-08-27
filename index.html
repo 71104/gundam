@@ -8,7 +8,7 @@
 	<meta property="og:url" content="http://71104.github.io/sonic/">
 	<meta property="og:image" content="http://71104.github.io/sonic/media/img/logo.png">
 	<link rel="stylesheet" type="text/css" href="css/style.css"/>
-	<script type="text/javascript" src="js/oogl-1.0.0.js"></script>
+	<script type="text/javascript" src="js/oogl-1.0.1.js"></script>
 	<script type="text/javascript" src="js/QueryableDocument.js"></script>
 	<script type="text/javascript" src="js/Mesh.js"></script>
 	<script type="text/javascript" src="js/Frame.js"></script>
@@ -32,103 +32,110 @@ OOGL(function () {
 	});
 	oogl.enable(oogl.DEPTH_TEST);
 
-	OOGL.Ajax.get('media/dae/gundam.dae', function (response) {
-		var document = new QueryableDocument(response);
+	var loader = new oogl.Loader();
+
+	loader
+		.queueData('media/dae/gundam.dae', 'document')
+		.queueTexture('media/img/gundam.png')
+		.queueProgram('glsl/gundam', ['in_Vertex', 'in_Normal', 'in_TexCoord'])
+		.loadAssets(function (assets)
+	{
+		assets.getTexture('media/img/gundam.png').bind();
+
+		var document = new QueryableDocument(assets.getData('media/dae/gundam.dae'));
 		var meshes = {};
 		document.forEachNode('/COLLADA/library_geometries/geometry', function (node) {
 			meshes[document.queryString(node, './@id')] = new Mesh(document, document.queryNode(node, './mesh'), oogl);
 		});
 		var frame = new Frame(document, meshes);
-		new oogl.AsyncTexture('media/img/gundam.png', function () {
-			var program = new oogl.AjaxProgram('glsl/gundam', ['in_Vertex', 'in_Normal', 'in_TexCoord'], function () {
-				var zoom = 0.05;
-				var angleX = 0;
-				var angleY = 0;
-				var offsetX = 0;
-				var offsetY = 0;
 
-				program.use();
-				program.uniform1f('ScreenRatio', canvas.width / canvas.height);
+		var zoom = 0.05;
+		var angleX = 0;
+		var angleY = 0;
+		var offsetX = 0;
+		var offsetY = 0;
 
-				function range(a, b, c, d, x) {
-					return c + (x - a) * (d - c) / (b - a);
-				}
+		var program = assets.getProgram('glsl/gundam');
+		program.use();
+		program.uniform1f('ScreenRatio', canvas.width / canvas.height);
 
-				function sineRange(c, d, x) {
-					return range(-1, 1, c, d, x);
-				}
+		function range(a, b, c, d, x) {
+			return c + (x - a) * (d - c) / (b - a);
+		}
 
-				frame.setTransform(/root/, new OOGL.XRotationMatrix4(0.3));
-				frame.setTransform(/testa/, new OOGL.YRotationMatrix4(-0.3));
-				frame.setTransform(/dx_spalla/, new OOGL.ZRotationMatrix4(0.4));
-				frame.setTransform(/sx_spalla/, new OOGL.ZRotationMatrix4(-0.4));
-				frame.setTransform(/dx_gomito/, (new OOGL.XRotationMatrix4(0.35)).by(new OOGL.YRotationMatrix4(-1.3)));
-				frame.setTransform(/sx_gomito/, (new OOGL.XRotationMatrix4(-0.35)).by(new OOGL.YRotationMatrix4(-1.3)));
+		function sineRange(c, d, x) {
+			return range(-1, 1, c, d, x);
+		}
 
-				var loop = new OOGL.RenderLoop(function () {
-					var timestamp = OOGL.Timing.now() / 1000;
+		frame.setTransform(/root/, new OOGL.XRotationMatrix4(0.3));
+		frame.setTransform(/testa/, new OOGL.YRotationMatrix4(-0.3));
+		frame.setTransform(/dx_spalla/, new OOGL.ZRotationMatrix4(0.4));
+		frame.setTransform(/sx_spalla/, new OOGL.ZRotationMatrix4(-0.4));
+		frame.setTransform(/dx_gomito/, (new OOGL.XRotationMatrix4(0.35)).by(new OOGL.YRotationMatrix4(-1.3)));
+		frame.setTransform(/sx_gomito/, (new OOGL.XRotationMatrix4(-0.35)).by(new OOGL.YRotationMatrix4(-1.3)));
 
-					function customSine(speed) {
-						return Math.sin((timestamp * speed) % (Math.PI * 2));
-					}
-					function customCosine(speed) {
-						return Math.cos((timestamp * speed) % (Math.PI * 2));
-					}
+		var loop = new OOGL.RenderLoop(function () {
+			var timestamp = OOGL.Timing.now() / 1000;
 
-					frame.setTransform(/dx_femore/, new OOGL.ZRotationMatrix4(sineRange(-0.5, 1.2, customSine(8))));
-					frame.setTransform(/sx_femore/, new OOGL.ZRotationMatrix4(sineRange(1.2, -0.5, customSine(8))));
-					frame.setTransform(/dx_ginocchio/, new OOGL.ZRotationMatrix4(sineRange(1.6, 0, -customCosine(8))));
-					frame.setTransform(/sx_ginocchio/, new OOGL.ZRotationMatrix4(sineRange(1.6, 0, customCosine(8))));
+			function customSine(speed) {
+				return Math.sin((timestamp * speed) % (Math.PI * 2));
+			}
+			function customCosine(speed) {
+				return Math.cos((timestamp * speed) % (Math.PI * 2));
+			}
 
-					frame.setTransform(/dx_clavicola/, new OOGL.XRotationMatrix4(sineRange(-1, 1, customSine(8))));
-					frame.setTransform(/sx_clavicola/, new OOGL.XRotationMatrix4(sineRange(-1, 1, customSine(8))));
+			frame.setTransform(/dx_femore/, new OOGL.ZRotationMatrix4(sineRange(-0.5, 1.2, customSine(8))));
+			frame.setTransform(/sx_femore/, new OOGL.ZRotationMatrix4(sineRange(1.2, -0.5, customSine(8))));
+			frame.setTransform(/dx_ginocchio/, new OOGL.ZRotationMatrix4(sineRange(1.6, 0, -customCosine(8))));
+			frame.setTransform(/sx_ginocchio/, new OOGL.ZRotationMatrix4(sineRange(1.6, 0, customCosine(8))));
 
-					oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
-					program.uniform1f('Zoom', zoom);
-					program.uniform2fv('Rotation', [angleX, angleY]);
-					program.uniform2fv('Translation', [offsetX, offsetY]);
-					frame.draw(program);
-					oogl.flush();
-				});
-				loop.start();
+			frame.setTransform(/dx_clavicola/, new OOGL.XRotationMatrix4(sineRange(-1, 1, customSine(8))));
+			frame.setTransform(/sx_clavicola/, new OOGL.XRotationMatrix4(sineRange(-1, 1, customSine(8))));
 
-				canvas.addEventListener('scroll', function (event) {
-					event.preventDefault();
-					// TODO
-				}, false);
-
-				var mode = null;
-				var x0, y0;
-				canvas.addEventListener('mousedown', function (event) {
-					event.preventDefault();
-					mode = ['rotate', null, 'translate'][event.button];
-					x0 = event.clientX;
-					y0 = event.clientY;
-				}, false);
-				canvas.addEventListener('mousemove', function (event) {
-					event.preventDefault();
-					switch (mode) {
-					case 'rotate':
-						angleX += (y0 - event.clientY) * 0.01;
-						angleY += (event.clientX - x0) * 0.01;
-						break;
-					case 'translate':
-						offsetX += (event.clientX - x0) * 0.05;
-						offsetY += (y0 - event.clientY) * 0.05;
-						break;
-					default:
-						return;
-					}
-					x0 = event.clientX;
-					y0 = event.clientY;
-				}, false);
-				canvas.addEventListener('mouseup', function () {
-					event.preventDefault();
-					mode = null;
-				}, false);
-			});
+			oogl.clear(oogl.COLOR_BUFFER_BIT | oogl.DEPTH_BUFFER_BIT);
+			program.uniform1f('Zoom', zoom);
+			program.uniform2fv('Rotation', [angleX, angleY]);
+			program.uniform2fv('Translation', [offsetX, offsetY]);
+			frame.draw(program);
+			oogl.flush();
 		});
-	}, 'document');
+		loop.start();
+
+		canvas.addEventListener('scroll', function (event) {
+			event.preventDefault();
+			// TODO
+		}, false);
+
+		var mode = null;
+		var x0, y0;
+		canvas.addEventListener('mousedown', function (event) {
+			event.preventDefault();
+			mode = ['rotate', null, 'translate'][event.button];
+			x0 = event.clientX;
+			y0 = event.clientY;
+		}, false);
+		canvas.addEventListener('mousemove', function (event) {
+			event.preventDefault();
+			switch (mode) {
+			case 'rotate':
+				angleX += (y0 - event.clientY) * 0.01;
+				angleY += (event.clientX - x0) * 0.01;
+				break;
+			case 'translate':
+				offsetX += (event.clientX - x0) * 0.05;
+				offsetY += (y0 - event.clientY) * 0.05;
+				break;
+			default:
+				return;
+			}
+			x0 = event.clientX;
+			y0 = event.clientY;
+		}, false);
+		canvas.addEventListener('mouseup', function () {
+			event.preventDefault();
+			mode = null;
+		}, false);
+	});
 });
 	</script>
 </body>

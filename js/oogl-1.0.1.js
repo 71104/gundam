@@ -1,4 +1,4 @@
-/*! Object-Oriented Graphics Library - v1.0.0 - 2013-08-23
+/*! Object-Oriented Graphics Library - v1.0.1 - 2013-08-28
 * Released under the MIT License
 * http://oogljs.com/
 * Copyright (c) 2013 Alberto La Rocca */
@@ -131,6 +131,8 @@ OOGL.Timing = {
  * @static
  */
 OOGL.Ajax = new (function () {
+	var thisObject = this;
+
 	var errorCallback = function () {};
 
 	/**
@@ -138,8 +140,9 @@ OOGL.Ajax = new (function () {
 	 * related to an AJAX request occurs.
 	 *
 	 * @method onError
+	 * @chainable
 	 * @param callback {Function} A user-defined callback function that gets
-	 *	called in case of an error in an AJAX request.
+	 * called in case of an error in an AJAX request.
 	 * @example
 	 *	OOGL.Ajax.onError(function () {
 	 *		alert('AJAX error occurred.');
@@ -147,6 +150,7 @@ OOGL.Ajax = new (function () {
 	 */
 	this.onError = function (callback) {
 		errorCallback = callback || function () {};
+		return thisObject;
 	};
 
 	function XHR(handler) {
@@ -319,6 +323,7 @@ OOGL.Ajax = new (function () {
 			} else {
 				makeRequest(method, url);
 			}
+			return thisObject;
 		};
 	}
 
@@ -345,20 +350,37 @@ OOGL.Ajax = new (function () {
 				}
 				makeRequest(method, settings);
 			}
+			return thisObject;
 		};
 	}
 
 	/**
-	 * Performs a GET AJAX request. The data returned from the server is passed
-	 * to a user-defined callback function.
+	 * Performs a GET AJAX request.
+	 *
+	 * The data returned from the server is passed to a user-defined callback
+	 * function.
 	 *
 	 * @method get
+	 * @chainable
 	 * @param url {String} The URL to request.
-	 * @param [data] {Object} TODO
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and attached to the URL using a `?`
+	 * character.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
-	 * @param [type] {String} TODO
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Mixed} The response object returned by the
+	 * server and passed to the callback function. Its type depends on the
+	 * specified `type` parameter; for example, it is a DOM `Document` object if
+	 * `type` is `document` or a plain JavaScript object if `type` is `json`.
+	 * @param [type=''] {String} The type of the returned data, used to set
+	 * `XHR.responseType`. It can be `arraybuffer`, `blob`, `document`, `json`,
+	 * `text` or an empty string; an empty string equals `text`.
 	 * @example
 	 *	OOGL.Ajax.get('shaders/frag/box.frag', function (source) {
 	 *		fragmentShader = new oogl.FragmentShader(source);
@@ -372,10 +394,21 @@ OOGL.Ajax = new (function () {
 	 * as JSON and passed to a user-defined callback function.
 	 *
 	 * @method getJSON
-	 * @param url {String} url The URL to request.
+	 * @chainable
+	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and attached to the URL using a `?`
+	 * character.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Object} The response object returned by the
+	 * server and passed to the callback function.
 	 * @example
 	 *	OOGL.Ajax.getJSON('meshes/box.json', function (box) {
 	 *		vertices = new oogl.VertexArray(0, 3, box.vertices);
@@ -390,10 +423,27 @@ OOGL.Ajax = new (function () {
 	 * to a user-defined callback function.
 	 *
 	 * @method post
+	 * @chainable
 	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and sent in the request body.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Mixed} The response object returned by the
+	 * server and passed to the callback function. Its type depends on the
+	 * specified `type` parameter; for example, it is a DOM `Document` object if
+	 * `type` is `document` or a plain JavaScript object if `type` is `json`.
+	 * @param [type=''] {String} The type of the returned data, used to set
+	 * `XHR.responseType`. It can be `arraybuffer`, `blob`, `document`, `json`,
+	 * `text` or an empty string; an empty string equals `text`.
+	 * @example
+	 *	TODO
 	 */
 	this.post = bindRequest('POST');
 
@@ -402,10 +452,22 @@ OOGL.Ajax = new (function () {
 	 * as JSON and passed to a user-defined callback function.
 	 *
 	 * @method postJSON
+	 * @chainable
 	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and sent in the request body.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Object} The response object returned by the
+	 * server and passed to the callback function.
+	 * @example
+	 *	TODO
 	 */
 	this.postJSON = bindJSONRequest('POST');
 
@@ -414,10 +476,27 @@ OOGL.Ajax = new (function () {
 	 * to a user-defined callback function.
 	 *
 	 * @method put
+	 * @chainable
 	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and sent in the request body.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Mixed} The response object returned by the
+	 * server and passed to the callback function. Its type depends on the
+	 * specified `type` parameter; for example, it is a DOM `Document` object if
+	 * `type` is `document` or a plain JavaScript object if `type` is `json`.
+	 * @param [type=''] {String} The type of the returned data, used to set
+	 * `XHR.responseType`. It can be `arraybuffer`, `blob`, `document`, `json`,
+	 * `text` or an empty string; an empty string equals `text`.
+	 * @example
+	 *	TODO
 	 */
 	this.put = bindRequest('PUT');
 
@@ -426,10 +505,22 @@ OOGL.Ajax = new (function () {
 	 * as JSON and passed to a user-defined callback function.
 	 *
 	 * @method putJSON
+	 * @chainable
 	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and sent in the request body.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Object} The response object returned by the
+	 * server and passed to the callback function.
+	 * @example
+	 *	TODO
 	 */
 	this.putJSON = bindJSONRequest('PUT');
 
@@ -438,10 +529,27 @@ OOGL.Ajax = new (function () {
 	 * passed to a user-defined callback function.
 	 *
 	 * @method _delete
+	 * @chainable
 	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and sent in the request body.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Mixed} The response object returned by the
+	 * server and passed to the callback function. Its type depends on the
+	 * specified `type` parameter; for example, it is a DOM `Document` object if
+	 * `type` is `document` or a plain JavaScript object if `type` is `json`.
+	 * @param [type=''] {String} The type of the returned data, used to set
+	 * `XHR.responseType`. It can be `arraybuffer`, `blob`, `document`, `json`,
+	 * `text` or an empty string; an empty string equals `text`.
+	 * @example
+	 *	TODO
 	 */
 	this._delete = bindRequest('DELETE');
 
@@ -450,10 +558,22 @@ OOGL.Ajax = new (function () {
 	 * parsed as JSON and passed to a user-defined callback function.
 	 *
 	 * @method deleteJSON
+	 * @chainable
 	 * @param url {String} The URL to request.
+	 * @param [data] {Object} An optional object containing parameters to pass
+	 * to the server.
+	 *
+	 * The object is deeply examined, so it may contain nested objects and
+	 * arrays at any level.
+	 *
+	 * The parameters are URL-encoded and sent in the request body.
 	 * @param [callback] {Function} An optional one-argument user-defined
-	 *	callback function that is invoked when the request completes
-	 *	successfully.
+	 * callback function that is invoked when the request completes
+	 * successfully.
+	 * @param callback.response {Object} The response object returned by the
+	 * server and passed to the callback function.
+	 * @example
+	 *	TODO
 	 */
 	this.deleteJSON = bindJSONRequest('DELETE');
 })();
@@ -3139,10 +3259,10 @@ OOGL.PerspectiveProjection = function (screenRatio, focus) {
  * @class OOGL.Context
  * @extends WebGLRenderingContext
  * @constructor
- * @param {Mixed} canvasOrId An HTMLCanvasElement DOM object, or a string
+ * @param canvasOrId {Mixed} An HTMLCanvasElement DOM object, or a string
  *	containing its `id` attribute, representing the canvas whose WebGL context
  *	has to be wrapped.
- * @param {Object} [attributes] WebGL attributes to pass to `canvas.getContext`.
+ * @param [attributes] {Object} WebGL attributes to pass to `canvas.getContext`.
  * @example
  *	var oogl = new OOGL.Context('canvas', {
  *		stencil: true
@@ -3179,12 +3299,12 @@ OOGL.Context = function (canvasOrId, attributes) {
  * @class context.Buffer
  * @extends WebGLBuffer
  * @constructor
- * @param {Number} target The target against which this buffer will be bound
+ * @param target {Number} The target against which this buffer will be bound
  *	when the provided `bind` method is used. Either `gl.ARRAY_BUFFER` or
  *	`gl.ELEMENT_ARRAY_BUFFER`.
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
- * @param {Number} usage One of `gl.STATIC_DRAW`, `gl.STREAM_DRAW` or
+ * @param usage {Number} One of `gl.STATIC_DRAW`, `gl.STREAM_DRAW` or
  *	`gl.DYNAMIC_DRAW`; will be used when calling `gl.bufferData` through the
  *	provided `data` method.
  * @example
@@ -3245,7 +3365,7 @@ context.Buffer = (function () {
 		 * `gl.getBufferParameter` equivalent.
 		 *
 		 * @method getParameter
-		 * @param {Number} name The name of the parameter to query.
+		 * @param name {Number} The name of the parameter to query.
 		 * @return {Mixed} The queried value.
 		 * @example
 		 *	var size = buffer.getParameter(oogl.BUFFER_SIZE);
@@ -3309,7 +3429,7 @@ context.Buffer = (function () {
 		 * on the `type` specified to the constructor.
 		 *
 		 * @method data
-		 * @param {Mixed} sizeOrData Either a number representing the size to
+		 * @param sizeOrData {Mixed} Either a number representing the size to
 		 *	allocate or a JavaScript `Array` containing the data to store.
 		 * @example
 		 *	buffer.data([1, 1, -1, 1, -1, -1, 1, -1]);
@@ -3328,7 +3448,7 @@ context.Buffer = (function () {
 		 * Equivalent to calling `bind` and `data` subsequently.
 		 *
 		 * @method bindAndData
-		 * @param {Mixed} sizeOrData Either a number representing the size to
+		 * @param sizeOrData {Mixed} Either a number representing the size to
 		 *	allocate or a JavaScript `Array` containing the data to store. See
 		 *	the `bind` method.
 		 * @example
@@ -3349,8 +3469,8 @@ context.Buffer = (function () {
 		 * the constructor.
 		 *
 		 * @method subData
-		 * @param {Number} offset The index of the first element to overwrite.
-		 * @param {Array} data A JavaScript `Array` containing the data to
+		 * @param offset {Number} The index of the first element to overwrite.
+		 * @param data {Array} A JavaScript `Array` containing the data to
 		 *	store; the array will be automatically converted to a typed array,
 		 *	depending on the `type` specified to the constructor.
 		 * @example
@@ -3384,10 +3504,10 @@ context.Buffer = (function () {
  * @class context.StaticBuffer
  * @extends context.Buffer
  * @constructor
- * @param {Number} target The target against which this buffer will be bound
+ * @param target {Number} The target against which this buffer will be bound
  *	when the provided `bind` method is used. Either `gl.ARRAY_BUFFER` or
  *	`gl.ELEMENT_ARRAY_BUFFER`.
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.StaticBuffer(oogl.ARRAY_BUFFER, 'float');
@@ -3402,10 +3522,10 @@ context.StaticBuffer = function (target, type) {
  * @class context.StreamBuffer
  * @extends context.Buffer
  * @constructor
- * @param {Number} target The target against which this buffer will be bound
+ * @param target {Number} The target against which this buffer will be bound
  *	when the provided `bind` method is used. Either `gl.ARRAY_BUFFER` or
  *	`gl.ELEMENT_ARRAY_BUFFER`.
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.StreamBuffer(oogl.ARRAY_BUFFER, 'float');
@@ -3421,10 +3541,10 @@ context.StreamBuffer = function (target, type) {
  * @module context
  * @extends context.Buffer
  * @constructor
- * @param {Number} target The target against which this buffer will be bound
+ * @param target {Number} The target against which this buffer will be bound
  *	when the provided `bind` method is used. Either `gl.ARRAY_BUFFER` or
  *	`gl.ELEMENT_ARRAY_BUFFER`.
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.DynamicBuffer(oogl.ARRAY_BUFFER, 'float');
@@ -3439,9 +3559,9 @@ context.DynamicBuffer = function (target, type) {
  * @class context.ArrayBuffer
  * @extends context.Buffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
- * @param {Number} usage One of `gl.STATIC_DRAW`, `gl.STREAM_DRAW` or
+ * @param usage {Number} One of `gl.STATIC_DRAW`, `gl.STREAM_DRAW` or
  *	`gl.DYNAMIC_DRAW`; will be used when calling `gl.bufferData` through the
  *	provided `data` method.
  * @example
@@ -3457,9 +3577,9 @@ context.ArrayBuffer = function (type, usage) {
  * @class context.ElementArrayBuffer
  * @extends context.Buffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
- * @param {Number} usage One of `gl.STATIC_DRAW`, `gl.STREAM_DRAW` or
+ * @param usage {Number} One of `gl.STATIC_DRAW`, `gl.STREAM_DRAW` or
  *	`gl.DYNAMIC_DRAW`; will be used when calling `gl.bufferData` through the
  *	provided `data` method.
  * @example
@@ -3476,7 +3596,7 @@ context.ElementArrayBuffer = function (type, usage) {
  * @class context.StaticArrayBuffer
  * @extends context.StaticBuffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.StaticArrayBuffer('float');
@@ -3492,7 +3612,7 @@ context.StaticArrayBuffer = function (type) {
  * @class context.StaticElementArrayBuffer
  * @extends context.StaticBuffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.StaticElementArrayBuffer('float');
@@ -3508,7 +3628,7 @@ context.StaticElementArrayBuffer = function (type) {
  * @class context.StreamArrayBuffer
  * @extends context.StreamBuffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.StreamArrayBuffer('float');
@@ -3524,7 +3644,7 @@ context.StreamArrayBuffer = function (type) {
  * @class context.StreamElementArrayBuffer
  * @extends context.StreamBuffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.StreamElementArrayBuffer('float');
@@ -3540,7 +3660,7 @@ context.StreamElementArrayBuffer = function (type) {
  * @class context.DynamicArrayBuffer
  * @extends context.DynamicBuffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.DynamicArrayBuffer('float');
@@ -3556,7 +3676,7 @@ context.DynamicArrayBuffer = function (type) {
  * @class context.DynamicElementArrayBuffer
  * @extends context.DynamicBuffer
  * @constructor
- * @param {String} type One of `byte`, `ubyte`, `short`, `ushort` and `float`;
+ * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` and `float`;
  *	indicates the type of the data that will be put in the buffer.
  * @example
  *	var buffer = new oogl.DynamicElementArrayBuffer('float');
@@ -3576,22 +3696,25 @@ context.DynamicElementArrayBuffer = function (type) {
  * component vertex attribute array.
  *
  * The attribute array is associated to the specified `index`: the provided
- * `enable` and `disable` methods enable and disable the `index`-th attribute
- * array calling `gl.enableVertexAttribArray` and `gl.disableVertexAttribArray`
- * and the provided `pointer` method invokes `gl.vertexAttribPointer` with the
- * specified `index` and `type`.
+ * {{#crossLink "context.AttributeArray1/enable"}}enable{{/crossLink}} and
+ * {{#crossLink "context.AttributeArray1/disable"}}disable{{/crossLink}} methods
+ * enable and disable the `index`-th attribute array calling
+ * `gl.enableVertexAttribArray` and `gl.disableVertexAttribArray` and the
+ * provided
+ * {{#crossLink "context.AttributeArray1/pointer"}}pointer{{/crossLink}} method
+ * invokes `gl.vertexAttribPointer` with the specified `index` and `type`.
  *
  * @class context.AttributeArray1
  * @extends context.StaticArrayBuffer
  * @constructor
  * @param index {Number} The attribute array index.
  * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` or `float`;
- *	indicates the type of the data that will be put in the buffer.
+ * indicates the type of the data that will be put in the buffer.
  * @param data {Number[]} A JavaScript `Array` containing the array data; it
- *	will be automatically converted to a typed array.
+ * will be automatically converted to a typed array.
  * @param [normalize=false] {Boolean} Indicates whether the elements of the
- *	array must be automatically normalized by the GL (see the explanation for
- *	the equivalent argument in `gl.vertexAttribPointer`).
+ * array must be automatically normalized by the GL (see the explanation for the
+ * equivalent argument in `gl.vertexAttribPointer`).
  * @example
  *	var array = new oogl.AttributeArray1(0, 'float', [1, 2, 3, 4, 5, 6, 7, 8]);
  */
@@ -3659,10 +3782,10 @@ context.AttributeArray1 = function (index, type, data, normalize) {
 	 *
 	 * @method pointer
 	 * @param [stride=0] {Number} The stride between consecutive elements in the
-	 *	array (see the explanation for the equivalent argument in
-	 *	`gl.vertexAttribPointer`).
+	 * array (see the explanation for the equivalent argument in
+	 * `gl.vertexAttribPointer`).
 	 * @param [offset=0] {Number} The index of the first element of the
-	 *	underlying buffer to be used for the attribute array.
+	 * underlying buffer to be used for the attribute array.
 	 *
 	 * This value is multiplied by the data type size and used as the `pointer`
 	 * parameter in the `gl.vertexAttribPointer` call.
@@ -3681,14 +3804,17 @@ context.AttributeArray1 = function (index, type, data, normalize) {
 	 *
 	 * You may optionally specify `stride` and `offset` parameters.
 	 *
-	 * Equivalent to calling `bind` and `pointer` subsequently.
+	 * Equivalent to calling
+	 * {{#crossLink "context.Buffer/bind"}}bind{{/crossLink}} and
+	 * {{#crossLink "context.AttributeArray1/pointer"}}pointer{{/crossLink}}
+	 * subsequently.
 	 *
 	 * @method bindAndPointer
 	 * @param [stride=0] {Number} The stride between consecutive elements in the
-	 *	array (see the explanation for the equivalent argument in
-	 *	`gl.vertexAttribPointer`).
+	 * array (see the explanation for the equivalent argument in
+	 * `gl.vertexAttribPointer`).
 	 * @param [offset=0] {Number} The index of the first element of the
-	 *	underlying buffer to be used for the attribute array.
+	 * underlying buffer to be used for the attribute array.
 	 *
 	 * This value is multiplied by the data type size and used as the `pointer`
 	 * parameter in the `gl.vertexAttribPointer` call.
@@ -3701,14 +3827,22 @@ context.AttributeArray1 = function (index, type, data, normalize) {
 	};
 
 	/**
-	 * TODO
+	 * Enables the `index`-th vertex attribute array, binds this buffer to its
+	 * target and specified its pointer for the `index`-th vertex attribute
+	 * array.
+	 *
+	 * Equivalent to calling
+	 * {{#crossLink "context.AttributeArray1/enable"}}enable{{/crossLink}},
+	 * {{#crossLink "context.Buffer/bind"}}bind{{/crossLink}} and
+	 * {{#crossLink "context.AttributeArray1/pointer"}}pointer{{/crossLink}}
+	 * subsequently.
 	 *
 	 * @method enableBindAndPointer
 	 * @param [stride=0] {Number} The stride between consecutive elements in the
-	 *	array (see the explanation for the equivalent argument in
-	 *	`gl.vertexAttribPointer`).
+	 * array (see the explanation for the equivalent argument in
+	 * `gl.vertexAttribPointer`).
 	 * @param [offset=0] {Number} The index of the first element of the
-	 *	underlying buffer to be used for the attribute array.
+	 * underlying buffer to be used for the attribute array.
 	 *
 	 * This value is multiplied by the data type size and used as the `pointer`
 	 * parameter in the `gl.vertexAttribPointer` call.
@@ -3729,22 +3863,25 @@ context.AttributeArray1 = function (index, type, data, normalize) {
  * vertex attribute array.
  *
  * The attribute array is associated to the specified `index`: the provided
- * `enable` and `disable` methods enable and disable the `index`-th attribute
- * array calling `gl.enableVertexAttribArray` and `gl.disableVertexAttribArray`
- * and the provided `pointer` method invokes `gl.vertexAttribPointer` with the
- * specified `index` and `type`.
+ * {{#crossLink "context.AttributeArray2/enable"}}enable{{/crossLink}} and
+ * {{#crossLink "context.AttributeArray2/disable"}}disable{{/crossLink}} methods
+ * enable and disable the `index`-th attribute array calling
+ * `gl.enableVertexAttribArray` and `gl.disableVertexAttribArray` and the
+ * provided
+ * {{#crossLink "context.AttributeArray2/pointer"}}pointer{{/crossLink}} method
+ * invokes `gl.vertexAttribPointer` with the specified `index` and `type`.
  *
  * @class context.AttributeArray2
  * @extends context.StaticArrayBuffer
  * @constructor
  * @param index {Number} The attribute array index.
  * @param type {String} One of `byte`, `ubyte`, `short`, `ushort` or `float`;
- *	indicates the type of the data that will be put in the buffer.
+ * indicates the type of the data that will be put in the buffer.
  * @param data {Number[]} A JavaScript `Array` containing the array data; it
- *	will be automatically converted to a typed array.
+ * will be automatically converted to a typed array.
  * @param [normalize=false] {Boolean} Indicates whether the elements of the
- *	array must be automatically normalized by the GL (see the explanation for
- *	the equivalent argument in `gl.vertexAttribPointer`).
+ * array must be automatically normalized by the GL (see the explanation for the
+ * equivalent argument in `gl.vertexAttribPointer`).
  * @example
  *	var array = new oogl.AttributeArray2(0, 'float', [1, 2, 3, 4, 5, 6, 7, 8]);
  */
@@ -3812,10 +3949,10 @@ context.AttributeArray2 = function (index, type, data, normalize) {
 	 *
 	 * @method pointer
 	 * @param [stride=0] {Number} The stride between consecutive elements in the
-	 *	array (see the explanation for the equivalent argument in
-	 *	`gl.vertexAttribPointer`).
+	 * array (see the explanation for the equivalent argument in
+	 * `gl.vertexAttribPointer`).
 	 * @param [offset=0] {Number} The index of the first element of the
-	 *	underlying buffer to be used for the attribute array.
+	 * underlying buffer to be used for the attribute array.
 	 *
 	 * This value is multiplied by the data type size and used as the `pointer`
 	 * parameter in the `gl.vertexAttribPointer` call.
@@ -3834,14 +3971,17 @@ context.AttributeArray2 = function (index, type, data, normalize) {
 	 *
 	 * You may optionally specify `stride` and `offset` parameters.
 	 *
-	 * Equivalent to calling `bind` and `pointer` subsequently.
+	 * Equivalent to calling
+	 * {{#crossLink "context.Buffer/bind"}}bind{{/crossLink}} and
+	 * {{#crossLink "context.AttributeArray2/pointer"}}pointer{{/crossLink}}
+	 * subsequently.
 	 *
 	 * @method bindAndPointer
 	 * @param [stride=0] {Number} The stride between consecutive elements in the
-	 *	array (see the explanation for the equivalent argument in
-	 *	`gl.vertexAttribPointer`).
+	 * array (see the explanation for the equivalent argument in
+	 * `gl.vertexAttribPointer`).
 	 * @param [offset=0] {Number} The index of the first element of the
-	 *	underlying buffer to be used for the attribute array.
+	 * underlying buffer to be used for the attribute array.
 	 *
 	 * This value is multiplied by the data type size and used as the `pointer`
 	 * parameter in the `gl.vertexAttribPointer` call.
@@ -3854,14 +3994,22 @@ context.AttributeArray2 = function (index, type, data, normalize) {
 	};
 
 	/**
-	 * TODO
+	 * Enables the `index`-th vertex attribute array, binds this buffer to its
+	 * target and specified its pointer for the `index`-th vertex attribute
+	 * array.
+	 *
+	 * Equivalent to calling
+	 * {{#crossLink "context.AttributeArray2/enable"}}enable{{/crossLink}},
+	 * {{#crossLink "context.Buffer/bind"}}bind{{/crossLink}} and
+	 * {{#crossLink "context.AttributeArray2/pointer"}}pointer{{/crossLink}}
+	 * subsequently.
 	 *
 	 * @method enableBindAndPointer
 	 * @param [stride=0] {Number} The stride between consecutive elements in the
-	 *	array (see the explanation for the equivalent argument in
-	 *	`gl.vertexAttribPointer`).
+	 * array (see the explanation for the equivalent argument in
+	 * `gl.vertexAttribPointer`).
 	 * @param [offset=0] {Number} The index of the first element of the
-	 *	underlying buffer to be used for the attribute array.
+	 * underlying buffer to be used for the attribute array.
 	 *
 	 * This value is multiplied by the data type size and used as the `pointer`
 	 * parameter in the `gl.vertexAttribPointer` call.
@@ -4902,7 +5050,7 @@ context.ElementArray = function (indices, type) {
  * @class context.Texture
  * @extends WebGLTexture
  * @constructor
- * @param {Number} target The target against which this texture will be bound
+ * @param target {Number} The target against which this texture will be bound
  *	when the provided `bind` method is used. Either `gl.TEXTURE_2D` or
  *	`gl.TEXTURE_CUBE_MAP`.
  * @example
@@ -4947,7 +5095,7 @@ context.Texture = function (target) {
 	 * `gl.getTexParameter` equivalent.
 	 *
 	 * @method getParameter
-	 * @param {Number} name The name of the parameter to query.
+	 * @param name {Number} The name of the parameter to query.
 	 * @return {Mixed} The queried value.
 	 * @example
 	 *	var wrapS = texture.getParameter(oogl.TEXTURE_WRAP_S);
@@ -5024,8 +5172,8 @@ context.Texture = function (target) {
 	 * `gl.texParameterf` equivalent.
 	 *
 	 * @method parameterf
-	 * @param {Number} name The parameter's name.
-	 * @param {Number} value The new value.
+	 * @param name {Number} The parameter's name.
+	 * @param value {Number} The new value.
 	 */
 	texture.parameterf = function (name, value) {
 		context.texParameterf(target, name, value);
@@ -5037,8 +5185,8 @@ context.Texture = function (target) {
 	 * `gl.texParameteri` equivalent.
 	 *
 	 * @method parameteri
-	 * @param {Number} name The parameter's name.
-	 * @param {Number} value The new value.
+	 * @param name {Number} The parameter's name.
+	 * @param value {Number} The new value.
 	 * @example
 	 *	texture.parameteri(oogl.TEXTURE_MAG_FILTER, oogl.LINEAR);
 	 */
@@ -5052,7 +5200,7 @@ context.Texture = function (target) {
 	 * Equivalent to calling `gl.texParameteri` with `gl.TEXTURE_MIN_FILTER`.
 	 *
 	 * @method setMinFilter
-	 * @param {Number} filter The minifying filter; can be `gl.NEAREST`,
+	 * @param filter {Number} The minifying filter; can be `gl.NEAREST`,
 	 *	`gl.LINEAR`, `gl.NEAREST_MIPMAP_NEAREST`, `gl.LINEAR_MIPMAP_NEAREST`,
 	 *	`gl.NEAREST_MIPMAP_LINEAR` or `gl.LINEAR_MIPMAP_LINEAR`.
 	 * @example
@@ -5068,7 +5216,7 @@ context.Texture = function (target) {
 	 * Equivalent to calling `gl.texParameteri` with `gl.TEXTURE_MAG_FILTER`.
 	 *
 	 * @method setMagFilter
-	 * @param {Number} filter The magnifying filter; can be `gl.NEAREST` or
+	 * @param filter {Number} The magnifying filter; can be `gl.NEAREST` or
 	 *	`gl.LINEAR`.
 	 * @example
 	 *	texture.setMagFilter(oogl.LINEAR);
@@ -5083,7 +5231,7 @@ context.Texture = function (target) {
 	 * Equivalent to calling `gl.texParameteri` with `gl.TEXTURE_WRAP_S`.
 	 *
 	 * @method setWrapS
-	 * @param {Number} wrap The S wrapping setting; can be `gl.CLAMP_TO_EDGE`,
+	 * @param wrap {Number} The S wrapping setting; can be `gl.CLAMP_TO_EDGE`,
 	 *	`gl.MIRRORED_REPEAT` or `gl.REPEAT`.
 	 * @example
 	 *	texture.setWrapS(oogl.REPEAT);
@@ -5098,7 +5246,7 @@ context.Texture = function (target) {
 	 * Equivalent to calling `gl.texParameteri` with `gl.TEXTURE_WRAP_T`.
 	 *
 	 * @method setWrapT
-	 * @param {Number} wrap The T wrapping setting; can be `gl.CLAMP_TO_EDGE`,
+	 * @param wrap {Number} The T wrapping setting; can be `gl.CLAMP_TO_EDGE`,
 	 *	`gl.MIRRORED_REPEAT` or `gl.REPEAT`.
 	 * @example
 	 *	texture.setWrapT(oogl.REPEAT);
@@ -5126,13 +5274,13 @@ context.Texture = function (target) {
 	 * `gl.texImage2D` equivalent.
 	 *
 	 * @method image2D
-	 * @param {Number} level The mipmap reduction level.
-	 * @param {Number} format The texel format; can be `gl.ALPHA`, `gl.RGB`,
+	 * @param level {Number} The mipmap reduction level.
+	 * @param format {Number} The texel format; can be `gl.ALPHA`, `gl.RGB`,
 	 *	`gl.RGBA`, `gl.LUMINANCE` or `gl.LUMINANCE_ALPHA`.
-	 * @param {Number} type The binary data type; can be `gl.UNSIGNED_BYTE`,
+	 * @param type {Number} The binary data type; can be `gl.UNSIGNED_BYTE`,
 	 *	`gl.UNSIGNED_SHORT_5_6_5`, `gl.UNSIGNED_SHORT_4_4_4_4` or
 	 *	`gl.UNSIGNED_SHORT_5_5_5_1`.
-	 * @param {Mixed} object A DOM image, canvas or video element to use as
+	 * @param object {Mixed} A DOM image, canvas or video element to use as
 	 *	texture image.
 	 * @example
 	 *	texture.image2D(0, oogl.RGBA, oogl.UNSIGNED_BYTE, image);
@@ -5145,17 +5293,17 @@ context.Texture = function (target) {
 	 * Specifies an image, canvas or video for a region of this texture.
 	 *
 	 * @method subImage2D
-	 * @param {Number} level The mipmap reduction level.
-	 * @param {Number} xoffset The X offset within this texture.
-	 * @param {Number} xoffset The Y offset within this texture.
-	 * @param {Number} width The width of the region within this texture.
-	 * @param {Number} width The height of the region within this texture.
-	 * @param {Number} format The texel format; can be `gl.ALPHA`, `gl.RGB`,
+	 * @param level {Number} The mipmap reduction level.
+	 * @param xoffset {Number} The X offset within this texture.
+	 * @param yoffset {Number} The Y offset within this texture.
+	 * @param width {Number} The width of the region within this texture.
+	 * @param height {Number} The height of the region within this texture.
+	 * @param format {Number} The texel format; can be `gl.ALPHA`, `gl.RGB`,
 	 *	`gl.RGBA`, `gl.LUMINANCE` or `gl.LUMINANCE_ALPHA`.
-	 * @param {Number} type The binary data type; can be `gl.UNSIGNED_BYTE`,
+	 * @param type {Number} The binary data type; can be `gl.UNSIGNED_BYTE`,
 	 *	`gl.UNSIGNED_SHORT_5_6_5`, `gl.UNSIGNED_SHORT_4_4_4_4` or
 	 *	`gl.UNSIGNED_SHORT_5_5_5_1`.
-	 * @param {Mixed} object A DOM image, canvas or video element to use as
+	 * @param object {Mixed} A DOM image, canvas or video element to use as
 	 *	texture image.
 	 * @example
 	 *	texture.image2D(0, 200, 150, 400, 300, oogl.RGBA, oogl.UNSIGNED_BYTE, image);
@@ -5170,13 +5318,13 @@ context.Texture = function (target) {
 	 * `gl.copyTexImage2D` equivalent.
 	 *
 	 * @method copyImage2D
-	 * @param {Number} level The mipmap reduction level.
-	 * @param {Number} internalFormat The texel format; can be `gl.ALPHA`,
+	 * @param level {Number} The mipmap reduction level.
+	 * @param internalFormat {Number} The texel format; can be `gl.ALPHA`,
 	 *	`gl.RGB`, `gl.RGBA`, `gl.LUMINANCE` or `gl.LUMINANCE_ALPHA`.
-	 * @param {Number} x The X window coordinate of the region to be copied.
-	 * @param {Number} y The Y window coordinate of the region to be copied.
-	 * @param {Number} width The width of the region to be copied.
-	 * @param {Number} height The height of the region to be copied.
+	 * @param x {Number} The X window coordinate of the region to be copied.
+	 * @param y {Number} The Y window coordinate of the region to be copied.
+	 * @param width {Number} The width of the region to be copied.
+	 * @param height {Number} The height of the region to be copied.
 	 * @example
 	 *	// copies an 800x600 pixel window
 	 *	texture.copyImage2D(0, oogl.RGBA, 0, 0, 800, 600);
@@ -5191,13 +5339,13 @@ context.Texture = function (target) {
 	 * `gl.copyTexSubImage2D` equivalent.
 	 *
 	 * @method copySubImage2D
-	 * @param {Number} level The mipmap reduction level.
-	 * @param {Number} xoffset The X offset within this texture.
-	 * @param {Number} xoffset The Y offset within this texture.
-	 * @param {Number} x The X offset within the framebuffer.
-	 * @param {Number} y The Y offset within the framebuffer.
-	 * @param {Number} width The width of the region to copy.
-	 * @param {Number} width The height of the region to copy.
+	 * @param level {Number} The mipmap reduction level.
+	 * @param xoffset {Number} The X offset within this texture.
+	 * @param yoffset {Number} The Y offset within this texture.
+	 * @param x {Number} The X offset within the framebuffer.
+	 * @param y {Number} The Y offset within the framebuffer.
+	 * @param width {Number} The width of the region to copy.
+	 * @param height {Number} The height of the region to copy.
 	 * @example
 	 *	texture.copySubImage2D(0, 0, 0, 200, 150, 400, 300);
 	 */
@@ -5248,11 +5396,11 @@ context.Texture2D = function () {
  * @class context.AutoTexture
  * @extends context.Texture2D
  * @constructor
- * @param {Mixed} object A DOM image, canvas or video element to use as the
+ * @param object {Mixed} A DOM image, canvas or video element to use as the
  *	texture image.
- * @param {Number} [magFilter=gl.LINEAR] An optional value for the magnifying
+ * @param [magFilter=gl.LINEAR] {Number} An optional value for the magnifying
  *	filter.
- * @param {Number} [minFilter=gl.LINEAR] An optional value for the minifying
+ * @param [minFilter=gl.LINEAR] {Number} An optional value for the minifying
  *	filter.
  * @example
  *	var arrays = new oogl.AttributeArrays(vertices.length);
@@ -5292,12 +5440,12 @@ context.AutoTexture = function (object, magFilter, minFilter) {
  * @class context.AsyncTexture
  * @extends context.Texture2D
  * @constructor
- * @param {String} url The URL of the texture image.
- * @param {Function} callback A user-defined callback function that is called
+ * @param url {String} The URL of the texture image.
+ * @param callback {Function} A user-defined callback function that is called
  *	after the texture has been loaded and configured.
- * @param {Number} [magFilter=gl.LINEAR] An optional value for the magnifying
+ * @param [magFilter=gl.LINEAR] {Number} An optional value for the magnifying
  *	filter.
- * @param {Number} [minFilter=gl.LINEAR] An optional value for the minifying
+ * @param [minFilter=gl.LINEAR] {Number} An optional value for the minifying
  *	filter.
  * @example
  *	var arrays = new oogl.AttributeArrays(vertices.length);
@@ -5363,11 +5511,11 @@ context.CubeMap = function () {
  *
  * @class context.AsyncCubeMap
  * @constructor
- * @param {String} name TODO
- * @param {Function} callback TODO
- * @param {Number} [magFilter=gl.LINEAR] An optional value for the magnifying
+ * @param name {String} name TODO
+ * @param callback {Function} callback TODO
+ * @param [magFilter=gl.LINEAR] {Number} An optional value for the magnifying
  *	filter.
- * @param {Number} [minFilter=gl.LINEAR] An optional value for the minifying
+ * @param [minFilter=gl.LINEAR] {Number} An optional value for the minifying
  *	filter.
  * @example
  *	TODO
@@ -5427,7 +5575,7 @@ context.AsyncCubeMap = function (namePattern, callback, magFilter, minFilter) {
  *
  * @class context.Textures
  * @constructor
- * @param {Object} [textures={}] An optional object that map names to
+ * @param [textures={}] {Object} An optional object that map names to
  *	`oogl.Texture` objects. Names are used when specifying uniform variables
  *	using the provided `uniform` method.
  * @example
@@ -5461,8 +5609,8 @@ context.Textures = function (textures) {
 		 * used in programs.
 		 *
 		 * @method add
-		 * @param {String} name The name of the associated uniform variable.
-		 * @param {context.Texture} texture The OOGL texture to add.
+		 * @param name {String} The name of the associated uniform variable.
+		 * @param texture {context.Texture} The OOGL texture to add.
 		 * @example
 		 *	var textures = new oogl.Textures();
 		 *	textures.add('Texture', texture);
@@ -5510,7 +5658,7 @@ context.Textures = function (textures) {
 		 * automatically assigned texture units.
 		 *
 		 * @method uniform
-		 * @param {context.Program} program A `context.Program`.
+		 * @param program {context.Program} A `context.Program`.
 		 * @example
 		 *	var textures = new oogl.Textures({
 		 *		'Texture': texture,
@@ -5533,7 +5681,7 @@ context.Textures = function (textures) {
 		 * Equivalent to calling `bind` and `uniform` subsequently.
 		 *
 		 * @method bindAndUniform
-		 * @param {context.Program} program A `context.Program`.
+		 * @param program {context.Program} A `context.Program`.
 		 * @example
 		 *	var textures = new oogl.Textures({
 		 *		'Texture': texture,
@@ -5583,7 +5731,7 @@ context.Textures = function (textures) {
  * @class context.Shader
  * @extends WebGLShader
  * @constructor
- * @param {Number} type The type of shader. Either `oogl.VERTEX_SHADER` or
+ * @param type {Number} The type of shader. Either `oogl.VERTEX_SHADER` or
  *	`oogl.FRAGMENT_SHADER`.
  * @example
  *	var vertexShader = new oogl.Shader(oogl.VERTEX_SHADER);
@@ -5599,7 +5747,7 @@ context.Shader = function (type) {
 	 * `gl.getShaderParameter` equivalent.
 	 *
 	 * @method getParameter
-	 * @param {String} name The parameter name.
+	 * @param name {String} The parameter name.
 	 * @return {Mixed} The queried value.
 	 * @example
 	 *	var shaderType = shader.getParameter(oogl.SHADER_TYPE);
@@ -5629,7 +5777,7 @@ context.Shader = function (type) {
 	 * `gl.shaderSource` equivalent.
 	 *
 	 * @method source
-	 * @param {String} source The GLSL source code.
+	 * @param source {String} The GLSL source code.
 	 * @example
 	 *	var shader = new oogl.Shader(oogl.VERTEX_SHADER);
 	 *	shader.source(vertexSource);
@@ -5763,7 +5911,7 @@ context.Shader = function (type) {
  * @class context.VertexShader
  * @extends context.Shader
  * @constructor
- * @param {String} [source] The optional GLSL source code for the shader.
+ * @param [source] {String} The optional GLSL source code for the shader.
  * @example
  *	var vertexShader = new oogl.VertexShader(vertexSource);
  */
@@ -5786,7 +5934,7 @@ context.VertexShader = function (source) {
  * @class context.FragmentShader
  * @extends context.Shader
  * @constructor
- * @param {String} [source] The optional GLSL source code for the shader.
+ * @param [source] {String} The optional GLSL source code for the shader.
  * @example
  *	var fragmentShader = new oogl.FragmentShader(fragmentSource);
  */
@@ -5812,8 +5960,8 @@ context.FragmentShader = function (source) {
  * @class context.AjaxVertexShader
  * @extends context.Shader
  * @constructor
- * @param {String} url A URL referring to the GLSL source code.
- * @param {Function} [callback] The callback function.
+ * @param url {String} A URL referring to the GLSL source code.
+ * @param [callback] {Function} The callback function.
  * @example
  *	var program = new oogl.Program();
  *	var vertexShader = new oogl.AjaxVertexShader('vert/box.vert', function () {
@@ -5846,8 +5994,8 @@ context.AjaxVertexShader = function (url, callback) {
  * @class context.AjaxFragmentShader
  * @extends context.Shader
  * @constructor
- * @param {String} url A URL referring to the GLSL source code.
- * @param {Function} [callback] The callback function.
+ * @param url {String} A URL referring to the GLSL source code.
+ * @param [callback] {Function} The callback function.
  * @example
  *	var program = new oogl.Program();
  *	var fragmentShader = new oogl.AjaxFragmentShader('frag/box.frag', function () {
@@ -5904,7 +6052,7 @@ context.Program = function () {
 	 * `gl.getProgramParameter` equivalent.
 	 *
 	 * @method getParameter
-	 * @param {String} name The name of the parameter to query.
+	 * @param name {String} The name of the parameter to query.
 	 * @return {Mixed} The queried value.
 	 * @example
 	 *	if (!program.getParameter(oogl.LINK_STATUS)) {
@@ -5921,7 +6069,7 @@ context.Program = function () {
 	 * `gl.attachShader` equivalent.
 	 *
 	 * @method attachShader
-	 * @param {WebGLShader} shader The shader to attach. Can also be an OOGL
+	 * @param shader {WebGLShader} The shader to attach. Can also be an OOGL
 	 *	`Shader`.
 	 * @example
 	 *	var program = new oogl.Program();
@@ -5939,7 +6087,7 @@ context.Program = function () {
 	 * `gl.detachShader` equivalent.
 	 *
 	 * @method detachShader
-	 * @param {WebGLShader} shader The shader to detach. Can also be an OOGL
+	 * @param shader {WebGLShader} The shader to detach. Can also be an OOGL
 	 *	`Shader`.
 	 * @example
 	 *	var vertexShader = new oogl.Shader(oogl.VERTEX_SHADER);
@@ -5994,8 +6142,8 @@ context.Program = function () {
 	 * `gl.bindAttribLocation` equivalent.
 	 *
 	 * @method bindAttribLocation
-	 * @param {Number} index The index of the attribute array.
-	 * @param {String} name The name of the shader attribute variable.
+	 * @param index {Number} The index of the attribute array.
+	 * @param name {String} The name of the shader attribute variable.
 	 * @example
 	 *	program.bindAttribLocation(0, 'in_Vertex');
 	 *	program.bindAttribLocation(1, 'in_Color');
@@ -6018,7 +6166,7 @@ context.Program = function () {
 	 *	program.bindAttribLocations(['in_Vertex', 'in_Color', 'in_TexCoords']);
 	 *
 	 * @method bindAttribLocations
-	 * @param {String[]} attributes The array, or index-to-string map,
+	 * @param attributes {String[]} The array, or index-to-string map,
 	 *	specifying the names to bind and their respective indices.
 	 * @example
 	 *	program.bindAttribLocations(['in_Vertex', 'in_Color', 'in_TexCoords']);
@@ -6174,7 +6322,7 @@ context.Program = function () {
 	 * `gl.getActiveAttrib` equivalent.
 	 *
 	 * @method getActiveAttrib
-	 * @param {Number} index The index of the attribute array.
+	 * @param index {Number} The index of the attribute array.
 	 * @return {WebGLActiveInfo} The requested information.
 	 * @example
 	 *	console.dir(program.getActiveAttrib(0));
@@ -6204,7 +6352,7 @@ context.Program = function () {
 	 * `gl.getActiveUniform` equivalent.
 	 *
 	 * @method getActiveUniform
-	 * @param {Number} index The index of the uniform variable.
+	 * @param index {Number} The index of the uniform variable.
 	 * @return {WebGLActiveInfo} The requested information.
 	 * @example
 	 *	console.dir(program.getActiveUniform(0));
@@ -6233,7 +6381,7 @@ context.Program = function () {
 	 * `gl.getAttribLocation` equivalent.
 	 *
 	 * @method getAttribLocation
-	 * @param {String} name The name of the attribute.
+	 * @param name {String} The name of the attribute.
 	 * @return {Number} The location of the named attribute.
 	 * @example
 	 *	console.log(program.getAttribLocation('in_Vertex'));
@@ -6254,7 +6402,7 @@ context.Program = function () {
 	 * method.
 	 *
 	 * @method getUniform
-	 * @param {Mixed} locationOrName Either the location or the name of the
+	 * @param locationOrName {Mixed} Either the location or the name of the
 	 *	uniform variable.
 	 * @return {Mixed} The value of the uniform variable.
 	 * @example
@@ -6279,7 +6427,7 @@ context.Program = function () {
 	 * `gl.getUniformLocation` equivalent.
 	 *
 	 * @method getUniformLocation
-	 * @param {String} name The name of the uniform variable.
+	 * @param name {String} The name of the uniform variable.
 	 * @return {Number} The location of the uniform variable.
 	 * @example
 	 *	var location = program.getUniformLocation('Angle');
@@ -6291,9 +6439,9 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniform
-	 * @param {Object} map TODO
-	 * @param {String} map[key].type TODO
-	 * @param {Mixed} map[key].value TODO
+	 * @param map {Object} map TODO
+	 * @param map[key].type {String} TODO
+	 * @param map[key].value {Mixed} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6316,8 +6464,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform1f
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value.
 	 * @example
 	 *	program.uniform1f('Angle', 0);
 	 */
@@ -6336,9 +6484,9 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform2f
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value for the first component.
-	 * @param {Number} y The new value for the second component.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value for the first component.
+	 * @param y {Number} The new value for the second component.
 	 * @example
 	 *	TODO
 	 */
@@ -6357,10 +6505,10 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform3f
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value for the first component.
-	 * @param {Number} y The new value for the second component.
-	 * @param {Number} z The new value for the third component.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value for the first component.
+	 * @param y {Number} The new value for the second component.
+	 * @param z {Number} The new value for the third component.
 	 * @example
 	 *	TODO
 	 */
@@ -6380,11 +6528,11 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform4f
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value for the first component.
-	 * @param {Number} y The new value for the second component.
-	 * @param {Number} z The new value for the third component.
-	 * @param {Number} w The new value for the fourth component.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value for the first component.
+	 * @param y {Number} The new value for the second component.
+	 * @param z {Number} The new value for the third component.
+	 * @param w {Number} The new value for the fourth component.
 	 * @example
 	 *	TODO
 	 */
@@ -6403,8 +6551,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform1fv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new value.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new value.
 	 * @example
 	 *	TODO
 	 */
@@ -6423,8 +6571,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform2fv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new values.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new values.
 	 * @example
 	 *	TODO
 	 */
@@ -6443,8 +6591,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform3fv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new values.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new values.
 	 * @example
 	 *	TODO
 	 */
@@ -6463,8 +6611,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform4fv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new values.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new values.
 	 * @example
 	 *	TODO
 	 */
@@ -6483,8 +6631,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform1i
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value.
 	 * @example
 	 *	TODO
 	 */
@@ -6503,9 +6651,9 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform2i
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value for the first component.
-	 * @param {Number} y The new value for the second component.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value for the first component.
+	 * @param y {Number} The new value for the second component.
 	 * @example
 	 *	TODO
 	 */
@@ -6524,10 +6672,10 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform3i
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value for the first component.
-	 * @param {Number} y The new value for the second component.
-	 * @param {Number} z The new value for the third component.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value for the first component.
+	 * @param y {Number} The new value for the second component.
+	 * @param z {Number} The new value for the third component.
 	 * @example
 	 *	TODO
 	 */
@@ -6546,11 +6694,11 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform4i
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number} x The new value for the first component.
-	 * @param {Number} y The new value for the second component.
-	 * @param {Number} z The new value for the third component.
-	 * @param {Number} w The new value for the fourth component.
+	 * @param name {String} The name of the uniform variable.
+	 * @param x {Number} The new value for the first component.
+	 * @param y {Number} The new value for the second component.
+	 * @param z {Number} The new value for the third component.
+	 * @param w {Number} The new value for the fourth component.
 	 * @example
 	 *	TODO
 	 */
@@ -6570,8 +6718,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform1iv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new value.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new value.
 	 * @example
 	 *	TODO
 	 */
@@ -6590,8 +6738,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform2iv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new values.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new values.
 	 * @example
 	 *	TODO
 	 */
@@ -6610,8 +6758,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform3iv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new values.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new values.
 	 * @example
 	 *	TODO
 	 */
@@ -6630,8 +6778,8 @@ context.Program = function () {
 	 * the provided `link` method.
 	 *
 	 * @method uniform4iv
-	 * @param {String} name The name of the uniform variable.
-	 * @param {Number[]} values An array containing the new values.
+	 * @param name {String} The name of the uniform variable.
+	 * @param values {Number[]} An array containing the new values.
 	 * @example
 	 *	TODO
 	 */
@@ -6643,8 +6791,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformVec2
-	 * @param {String} name TODO
-	 * @param {OOGL.Vector2} v TODO
+	 * @param name {String} TODO
+	 * @param v {OOGL.Vector2} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6656,8 +6804,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformVec3
-	 * @param {String} name TODO
-	 * @param {OOGL.Vector3} v TODO
+	 * @param name {String} TODO
+	 * @param v {OOGL.Vector3} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6669,8 +6817,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformVec4
-	 * @param {String} name TODO
-	 * @param {OOGL.Vector4} v TODO
+	 * @param name {String} TODO
+	 * @param v {OOGL.Vector4} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6682,8 +6830,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformMatrix2fv
-	 * @param {String} name TODO
-	 * @param {Number[]} values TODO
+	 * @param name {String} TODO
+	 * @param values {Number[]} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6695,8 +6843,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformMatrix3fv
-	 * @param {String} name TODO
-	 * @param {Number[]} values TODO
+	 * @param name {String} TODO
+	 * @param values {Number[]} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6708,8 +6856,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformMatrix4fv
-	 * @param {String} name TODO
-	 * @param {Number[]} values TODO
+	 * @param name {String} TODO
+	 * @param values {Number[]} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6721,8 +6869,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformMat2
-	 * @param {String} name TODO
-	 * @param {OOGL.Matrix2} matrix TODO
+	 * @param name {String} TODO
+	 * @param matrix {OOGL.Matrix2} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6737,8 +6885,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformMat3
-	 * @param {String} name TODO
-	 * @param {OOGL.Matrix3} matrix TODO
+	 * @param name {String} TODO
+	 * @param matrix {OOGL.Matrix3} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6754,8 +6902,8 @@ context.Program = function () {
 	 * TODO
 	 *
 	 * @method uniformMat4
-	 * @param {String} name TODO
-	 * @param {OOGL.Matrix4} matrix TODO
+	 * @param name {String} TODO
+	 * @param matrix {OOGL.Matrix4} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -6810,9 +6958,9 @@ context.Program = function () {
  * @class context.AutoProgram
  * @extends context.Program
  * @constructor
- * @param {String} vertexSource The GLSL source code for the vertex shader.
- * @param {String} fragmentSource The GLSL source code for the fragment shader.
- * @param {String[]} attributes An array of attribute variable names that are
+ * @param vertexSource {String} The GLSL source code for the vertex shader.
+ * @param fragmentSource {String} The GLSL source code for the fragment shader.
+ * @param attributes {String[]} An array of attribute variable names that are
  *	automatically bound to their respective indices in the array before linking.
  * @example
  *	var program = new oogl.AutoProgram(vertexSource, fragmentSource, ['in_Vertex', 'in_Color', 'in_TexCoords']);
@@ -6899,11 +7047,11 @@ context.AutoProgram = function (vertexSource, fragmentSource, attributes) {
  * @class context.AjaxProgram
  * @extends context.Program
  * @constructor
- * @param {String} name The URL to the shader sources excluding the file name
+ * @param name {String} The URL to the shader sources excluding the file name
  *	extension, which is automatically appended.
- * @param {String[]} attributes An array of attribute variable names that are
+ * @param attributes {String[]} An array of attribute variable names that are
  *	automatically bound to their respective indices in the array before linking.
- * @param {Function} callback A user-defined callback function that is called
+ * @param callback {Function} A user-defined callback function that is called
  *	after the program has been successfully compiled and linked.
  * @example
  *	var arrays = new oogl.AttributeArrays(vertices.length);
@@ -7035,8 +7183,8 @@ context.Framebuffer = function () {
 	 * `gl.getAttachmentParameter` equivalent.
 	 *
 	 * @method getAttachmentParameter
-	 * @param {Number} attachment TODO
-	 * @param {Number} name TODO
+	 * @param attachment {Number} TODO
+	 * @param name {Number} TODO
 	 * @return {Mixed} TODO
 	 * @example
 	 *	var attachmentType = framebuffer.getAttachmentParameter(oogl.COLOR_ATTACHMENT0, oogl.FRAMEBUFFER_ATTACHMENT_TYPE);
@@ -7078,8 +7226,8 @@ context.Framebuffer = function () {
 	 * `gl.framebufferRenderbuffer` equivalent.
 	 *
 	 * @method renderbuffer
-	 * @param {Number} attachment TODO
-	 * @param {WebGLRenderbuffer} renderbuffer TODO
+	 * @param attachment {Number} TODO
+	 * @param renderBuffer {WebGLRenderbuffer} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -7093,10 +7241,10 @@ context.Framebuffer = function () {
 	 * `gl.framebufferTexture2D` equivalent.
 	 *
 	 * @method texture2D
-	 * @param {Number} attachment TODO
-	 * @param {Number} textarget TODO
-	 * @param {WebGLTexture} texture TODO
-	 * @param {Number} level TODO
+	 * @param attachment {Number} TODO
+	 * @param textarget {Number} TODO
+	 * @param texture {WebGLTexture} TODO
+	 * @param level {Number} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -7164,7 +7312,7 @@ context.Renderbuffer = function () {
 	 * `gl.getRenderbufferParameter` equivalent.
 	 *
 	 * @method getParameter
-	 * @param {String} name TODO
+	 * @param name {String} TODO
 	 * @return {Mixed} TODO
 	 * @example
 	 *	TODO
@@ -7298,9 +7446,9 @@ context.Renderbuffer = function () {
 	 * TODO
 	 *
 	 * @method storage
-	 * @param {Number} internalFormat TODO
-	 * @param {Number} width TODO
-	 * @param {Number} height TODO
+	 * @param internalFormat {Number} TODO
+	 * @param width {Number} TODO
+	 * @param height {Number} TODO
 	 * @example
 	 *	TODO
 	 */
@@ -7383,6 +7531,7 @@ context.Loader = function () {
 				}, type);
 			});
 		} else {
+			type = parameters;
 			queue.push(function (data, textures, programs, callback, scope) {
 				OOGL.Ajax.get(id, function (response) {
 					data[id] = response;
@@ -7750,7 +7899,7 @@ context.Loader = function () {
  *
  * @class OOGL.RenderLoop
  * @constructor
- * @param {Function} tick A user-defined callback function that is invoked at
+ * @param tick {Function} A user-defined callback function that is invoked at
  *	each iteration of the loop. It typically contains (OO)GL calls that render
  *	the full scene.
  * @example
@@ -8054,7 +8203,7 @@ OOGL.RenderLoop = (function () {
 	 *
 	 * @method setType
 	 * @static
-	 * @param {String} newType The loop type; can be `request`, `interval` or
+	 * @param newType {String} The loop type; can be `request`, `interval` or
 	 *	`auto`.
 	 * @example
 	 *	RenderLoop.setType('request');
@@ -8111,7 +8260,7 @@ OOGL.RenderLoop = (function () {
 	 *
 	 * @method setRate
 	 * @static
-	 * @param {Number} newRate The new frame rate value.
+	 * @param newRate {Number} The new frame rate value.
 	 * @example
 	 *	RenderLoop.setRate(100);
 	 */
